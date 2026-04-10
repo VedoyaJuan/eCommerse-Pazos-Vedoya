@@ -5,11 +5,6 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-// Inicialización para Vercel (se ejecuta una sola vez)
-if (file_exists($vercel_init = __DIR__.'/../bootstrap/_init_vercel.php')) {
-    require $vercel_init;
-}
-
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
