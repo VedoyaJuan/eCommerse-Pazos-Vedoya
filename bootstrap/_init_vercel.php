@@ -13,9 +13,10 @@ if (getenv('VERCEL') && !file_exists($initMarker)) {
         // Crear directorio de storage si no existe
         @mkdir($storagePath, 0755, true);
         
-        // Usar Symfony Process para ejecutar artisan command
-        $process = new \Symfony\Component\Process\Process(['php', 'artisan', 'config:cache'], $basePath);
-        $process->run();
+        // Ejecutar artisan command usando exec
+        $output = [];
+        $returnVar = 0;
+        exec('cd ' . escapeshellarg($basePath) . ' && php artisan config:cache 2>&1', $output, $returnVar);
         
         // Marcar como inicializado
         file_put_contents($initMarker, date('Y-m-d H:i:s'));
