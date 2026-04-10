@@ -4,19 +4,24 @@
  * Se ejecuta una sola vez cuando el servidor se inicia por primera vez
  */
 
-if (getenv('VERCEL') && !file_exists(storage_path('.vercel_initialized'))) {
+$basePath = dirname(__DIR__);
+$storagePath = $basePath . '/storage';
+$initMarker = $storagePath . '/.vercel_initialized';
+
+if (getenv('VERCEL') && !file_exists($initMarker)) {
     try {
-        // Usar Symfony Process para ejecutar artisan commands
-        $process = new \Symfony\Component\Process\Process(['php', 'artisan', 'config:cache'], dirname(__DIR__));
+        // Crear directorio de storage si no existe
+        @mkdir($storagePath, 0755, true);
+        
+        // Usar Symfony Process para ejecutar artisan command
+        $process = new \Symfony\Component\Process\Process(['php', 'artisan', 'config:cache'], $basePath);
         $process->run();
         
         // Marcar como inicializado
-        @mkdir(storage_path(), 0755, true);
-        file_put_contents(storage_path('.vercel_initialized'), date('Y-m-d H:i:s'));
-        
+        file_put_contents($initMarker, date('Y-m-d H:i:s'));
         error_log('Vercel initialized successfully');
     } catch (Exception $e) {
-        // Silenciosamente fallar si hay errores
+        // Log silencioso - no interrumpir la aplicación
         error_log('Vercel init notice: ' . $e->getMessage());
     }
 }
