@@ -1,21 +1,28 @@
 <?php
-// En Vercel, limpiar cache de optimización en cada request (read-only filesystem hace que cache sea inconsistente)
+// Para Vercel: limpiar cache corrupto y usar configuración dinámica
 if (getenv('VERCEL')) {
-    $artisan = __DIR__ . '/../artisan';
-    if (file_exists($artisan)) {
-        // Limpiar cache de optimización para que Laravel se reinicialice
-        exec('php ' . escapeshellarg($artisan) . ' optimize:clear 2>&1 > /dev/null || true');
-    }
-    // Usar stderr para logging
     putenv('LOG_STACK=stderr');
+    
+    // Limpiar archivos de cache que pueden estar corruptos entre requests
+    $cacheFiles = [
+        __DIR__ . '/../bootstrap/cache/config.php',
+    ];
+    
+    foreach ($cacheFiles as $file) {
+        if (file_exists($file)) {
+            @unlink($file);
+        }
+    }
+    
+    // Forzar regeneración sin usar cached config
+    putenv('APP_CONFIG_CACHE=');
 }
 
-error_log('=== API INDEX STARTED ===');
-error_log('APP_ENV: ' . (getenv('APP_ENV') ?: 'NOT SET'));
+error_log('[API] Starting request for ' . ($_SERVER['REQUEST_URI'] ?? '/'));
 
 try {
     require __DIR__ . '/../public/index.php';
-} catch (Exception $e) {
-    error_log('ERROR: ' . $e->getMessage());
+} catch (Throwable $e) {
+    error_log('[API ERROR] ' . $e->getMessage() .  ' at ' . $e->getFile() . ':' . $e->getLine());
     throw $e;
 }

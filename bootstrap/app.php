@@ -4,12 +4,19 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-// En Vercel (read-only filesystem), no usar bootstrap cache
 $basePath = dirname(__DIR__);
+
+// En Vercel (read-only filesystem con caching problemático), limpiar cache de bootstrap
 if (getenv('VERCEL')) {
-    // Eliminar archivos de cache que causan problemas
-    @unlink($basePath . '/bootstrap/cache/services.php');
-    @unlink($basePath . '/bootstrap/cache/packages.php');
+    $cacheDir = $basePath . '/bootstrap/cache';
+    $filesToDelete = ['services.php', 'packages.php', 'config.php'];
+    
+    foreach ($filesToDelete as $file) {
+        $path = $cacheDir . '/' . $file;
+        if (file_exists($path)) {
+            @unlink($path);
+        }
+    }
 }
 
 return Application::configure(basePath: $basePath)
