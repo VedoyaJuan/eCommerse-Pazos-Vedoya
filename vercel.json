@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "npm run build 2>&1 || true",
+    "buildCommand": "npm run build && php artisan clear-compiled && php artisan package:discover --ansi 2>&1 || true",
     "functions": {
         "api/index.php": {
             "runtime": "vercel-php@0.8.0",
