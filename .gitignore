@@ -1,7 +1,7 @@
 *.log
 .DS_Store
 .env
-/bootstrap/cache/*.php
+/bootstrap/cache/config.php
 .env.backup
 .env.production
 .phpactor.json
