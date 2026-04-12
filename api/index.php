@@ -1,28 +1,54 @@
 <?php
-// Para Vercel: limpiar cache corrupto y usar configuración dinámica
+// Vercel runtime configuration
 if (getenv('VERCEL')) {
+    // Use stderr for logging in Vercel
     putenv('LOG_STACK=stderr');
     
-    // Limpiar archivos de cache que pueden estar corruptos entre requests
-    $cacheFiles = [
-        __DIR__ . '/../bootstrap/cache/config.php',
-    ];
+    // Configure config cache to use a temporary accessible path
+    if (!getenv('APP_CONFIG_CACHE')) {
+        putenv('APP_CONFIG_CACHE=/tmp/laravel-config-' . uniqid() . '.php');
+    }
     
-    foreach ($cacheFiles as $file) {
-        if (file_exists($file)) {
-            @unlink($file);
+    // Ensure storage directory has proper permissions
+    $storagePath = __DIR__ . '/../storage';
+    if (is_dir($storagePath)) {
+        @chmod($storagePath, 0777);
+        foreach (['framework', 'logs', 'app'] as $dir) {
+            $path = $storagePath . '/' . $dir;
+            if (is_dir($path)) {
+                @chmod($path, 0777);
+            }
         }
     }
     
-    // Forzar regeneración sin usar cached config
-    putenv('APP_CONFIG_CACHE=');
+    // Clean cache files that might be corrupted from previous deployments
+    $cacheFiles = [
+        __DIR__ . '/../bootstrap/cache/config.php',
+        __DIR__ . '/../bootstrap/cache/services.php',
+        __DIR__ . '/../bootstrap/cache/packages.php',
+    ];
+    
+    foreach ($cacheFiles as $file) {
+        if (file_exists($file) && is_file($file)) {
+            @unlink($file);
+        }
+    }
 }
-
-error_log('[API] Starting request for ' . ($_SERVER['REQUEST_URI'] ?? '/'));
 
 try {
     require __DIR__ . '/../public/index.php';
 } catch (Throwable $e) {
-    error_log('[API ERROR] ' . $e->getMessage() .  ' at ' . $e->getFile() . ':' . $e->getLine());
-    throw $e;
+    error_log('[API ERROR] ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
+    
+    // For debugging - remove in production
+    if (getenv('APP_DEBUG') === 'true') {
+        throw $e;
+    }
+    
+    // Return a generic error response
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Internal Server Error',
+        'message' => getenv('APP_DEBUG') === 'true' ? $e->getMessage() : 'An error occurred'
+    ]);
 }

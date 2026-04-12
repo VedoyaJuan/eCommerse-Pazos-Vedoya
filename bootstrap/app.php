@@ -6,15 +6,23 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 $basePath = dirname(__DIR__);
 
-// En Vercel (read-only filesystem con caching problemático), limpiar cache de bootstrap
+// Configure for Vercel serverless environment
 if (getenv('VERCEL')) {
-    $cacheDir = $basePath . '/bootstrap/cache';
-    $filesToDelete = ['services.php', 'packages.php', 'config.php'];
+    // Set configuration cache path to a temporary writable location
+    if (!getenv('APP_CONFIG_CACHE')) {
+        putenv('APP_CONFIG_CACHE=/tmp/laravel-config.php');
+    }
     
-    foreach ($filesToDelete as $file) {
-        $path = $cacheDir . '/' . $file;
-        if (file_exists($path)) {
-            @unlink($path);
+    // Clean bootstrap cache files that might be corrupted
+    $cacheDir = $basePath . '/bootstrap/cache';
+    if (is_dir($cacheDir)) {
+        $filesToDelete = ['services.php', 'packages.php'];
+        
+        foreach ($filesToDelete as $file) {
+            $path = $cacheDir . '/' . $file;
+            if (file_exists($path) && is_file($path)) {
+                @unlink($path);
+            }
         }
     }
 }
@@ -26,7 +34,7 @@ return Application::configure(basePath: $basePath)
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-    $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
