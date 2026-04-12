@@ -1,6 +1,7 @@
 {
     "version": 2,
-        "env": {
+    "buildCommand": "composer install --optimize-autoloader && npm install && npm run build && php artisan config:cache && php artisan clear-compiled",
+    "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
         "LOG_STACK": "stderr",

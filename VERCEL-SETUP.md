@@ -25,6 +25,7 @@ APP_NAME=Laravel
 APP_ENV=production
 APP_KEY=base64:j9ZO4sYg+Rb8nlALyEJ8APthM0w5vCBzwqeKAPjvf4g=
 APP_DEBUG=false
+APP_URL=https://[TU-PROJECT-NAME].vercel.app
 APP_LOCALE=en
 LOG_CHANNEL=stack
 LOG_STACK=stderr
