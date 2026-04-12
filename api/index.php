@@ -2,6 +2,8 @@
 
 if (getenv('VERCEL')) {
     putenv('LOG_STACK=stderr');
+    // Disable config cache in Vercel to avoid getCachedConfigPath() issues
+    putenv('APP_CONFIG_CACHE=');
     
     // Ensure storage directory is writable
     $storagePath = __DIR__ . '/../storage';
