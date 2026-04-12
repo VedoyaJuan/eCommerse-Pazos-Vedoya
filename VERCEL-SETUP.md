@@ -1,93 +1,148 @@
-# Configuración para Vercel
+# Guía de Despliegue en Vercel (Plan Gratuito)
 
-Este proyecto está configurado para ejecutarse en Vercel. Aquí está lo que necesitas hacer:
+Este proyecto está configurado para ejecutarse en Vercel plan gratuito (Hobby).
 
-## Pasos para desplegar en Vercel
+## 🚀 Pasos para Desplegar
 
-### 1. Variables de Entorno en Vercel Dashboard
+### 1. Conectar el Repositorio a Vercel
 
-En el dashboard de Vercel, debes agregar las siguientes variables de entorno:
+1. Ve a [vercel.com](https://vercel.com) e inicia sesión
+2. Haz clic en "Add New..." → "Project"
+3. Selecciona "Import Git Repository"
+4. Selecciona tu repositorio de GitHub (eCommerse-Pazos-Vedoya)
+5. Haz clic en "Import"
+
+### 2. Configurar Variables de Entorno
+
+Vercel abrirá la página de configuración del proyecto automáticamente. Si no es así:
+
+1. Ve a tu proyecto en Vercel
+2. Haz clic en "Settings" → "Environment Variables"
+3. Agrega las siguientes variables:
 
 ```
 APP_NAME=Laravel
 APP_ENV=production
 APP_KEY=base64:j9ZO4sYg+Rb8nlALyEJ8APthM0w5vCBzwqeKAPjvf4g=
 APP_DEBUG=false
-APP_URL=https://tu-dominio.com
-
+APP_LOCALE=en
 LOG_CHANNEL=stack
 LOG_STACK=stderr
 LOG_LEVEL=warning
-
 DB_CONNECTION=sqlite
 SESSION_DRIVER=file
 SESSION_LIFETIME=120
-
 CACHE_STORE=file
 FILESYSTEM_DISK=local
 QUEUE_CONNECTION=sync
-
 BROADCAST_CONNECTION=log
 ```
 
-**IMPORTANTE:** Reemplaza `https://tu-dominio.com` con tu URL real de Vercel.
+**IMPORTANTE:** 
+- Reemplaza `[TU-PROJECT-NAME]` con el nombre de tu proyecto en Vercel
+- El `APP_URL` debe ser exactamente: `https://[TU-PROJECT-NAME].vercel.app`
+- Mantén el `APP_KEY` que está generado
 
-### 2. Configuración de Vercel
+### 3. Verificar Configuración de Build
 
-El archivo `vercel.json` ya está configurado. Asegúrate de que:
+1. En Settings, ve a "Build & Development Settings"
+2. Verifica que:
+   - **Framework Preset**: `Other` (si no está auto-detectado)
+   - **Build Command**: (puede estar vacío - Vercel usará el de vercel.json)
+   - **Output Directory**: `public`
+   - **Install Command**: (puede estar vacío - Vercel usará el de vercel.json)
 
-- El `buildCommand` ejecute `php artisan config:cache`
-- Las variables de entorno incluyan `APP_CONFIG_CACHE=/tmp/laravel-config.php`
-- El `functions.api/index.php` tenga `laravelBuildCommand` configurado
+3. Haz clic en "Save"
 
-### 3. Problemas Comunes y Soluciones
+### 4. Desplegar
 
-#### Error: "Failed to open stream: No such file or directory"
+1. Haz clic en "Deploy"
+2. Espera a que se complete el build (esto puede tomar 2-3 minutos)
+3. Una vez completado, verás un link a tu aplicación
 
-Este era el problema que encontraste. Ha sido resuelto configurando:
-- `APP_CONFIG_CACHE` para usar un directorio temporal (`/tmp/`)
-- El buildCommand para ejecutar `php artisan config:cache`
-- El `api/index.php` para limpiar archivos de caché corruptos
+## 📋 Verificación Post-Despliegue
 
-#### Error: "Class 'config' does not exist"
+Una vez desplegado, verifica:
 
-Este error ocurría porque el archivo de caché de configuración no existía o estaba inválido. Ahora está resuelto.
+1. **Accede a la URL**: Debería mostrar tu página de inicio
+2. **Revisa los Logs**: 
+   - En Vercel, ve a "Deployments"
+   - Selecciona el último deployment
+   - Ve a "Functions" → "api/index.php"
+   - Haz clic en "Logs" para ver los logs en tiempo real
 
-#### Problemas de Permisos en Storage
+## 🔧 Solución de Problemas Comunes
 
-El archivo `api/index.php` ahora automáticamente intenta establecer permisos en el directorio `storage/`.
+### Error: "Build command failed"
 
-### 4. Verificar que Todo Está Bien
+**Causa**: El buildCommand en vercel.json está causando problemas
 
-Para verificar que tu despliegue funcionará:
+**Solución**: El archivo ya está configurado correctamente. Si persiste:
+1. Elimina el build actual
+2. Ve a "Deployments" → "Redeploy" del último deployment exitoso
+3. O haz un nuevo push a tu rama principal
 
-1. Asegúrate de que `composer.json` esté actualizado con `composer update`
-2. Ejecuta localmente: `php artisan config:cache`
-3. Prueba que puedas gen
-erar el caché sin errores
-4. Verifica que `bootstrap/cache/config.php` se haya generado
+### Error: "Failed to open stream: No such file or directory"
 
-### 5. Desplegar
+**Causa**: Ya fue resuelto. La configuración ahora no usa config cache en Vercel.
 
-1. Haz push de tus cambios a Git
-2. Conecta tu repositorio a Vercel si aún no lo has hecho
-3. Vercel automáticamente desplegará cuando hagas push
-4. Revisa los logs de Vercel para cualquier error
+**Solución**: Ve a Settings → Redeploy
 
-## Archivos Modificados
+### Error: "Class 'config' does not exist"
 
-- `vercel.json` - Configuración mejorada con buildCommand correcto y variables de entorno
-- `api/index.php` - Manejo mejorado de caché y errores
-- `bootstrap/app.php` - Configuración para Vercel
-- `.vercelignore` - Archivos correctos a ignorar
-- `.env.production` - Variables de producción
+**Causa**: Problema de configuración
 
-## Notas Importantes
+**Solución**: Verifica que todas las variables de entorno en el paso 2 estén correctas
 
-1. **Base de Datos**: El proyecto usa SQLite por defecto. En Vercel, el sistema de archivos es temporal, así que la base de datos se creará y se perderá en cada despliegue. Si necesitas persistencia, cambia a MySQL o PostgreSQL.
+### Página muestra errores en Vercel pero funciona localmente
 
-2. **Sesiones y Cache**: Se están almacenando en el servidor de archivos local, que es temporal en Vercel. Para producción, considera usar Redis o una base de datos.
+1. Ve a "Deployments" → "Functions" → "api/index.php" → "Logs"
+2. Busca líneas rojas (errores)
+3. Lee el mensaje de error completo
+4. Agrega la variable faltante a Environment Variables si es necesario
 
-3. **Logs**: Se envían a `stderr` para que aparezcan en los logs de Vercel.
+## 📁 Configuración de Archivos
 
-4. **Config Cache**: Se genera durante el build y se almacena en `/tmp/` que es un directorio writable en Vercel.
+### vercel.json
+- Define el buildCommand simplificado
+- Establece variables de entorno por defecto
+- Configura la función serverless de PHP
+
+### api/index.php
+- Punto de entrada de la aplicación
+- Se ejecuta en cada request
+- Limpia archivos de caché stale
+- Maneja errores específicos de Vercel
+
+### bootstrap/app.php
+- Inicializa la aplicación Laravel
+- Desactiva el config cache en Vercel para evitar archivos stale
+
+## ⚠️ Limitaciones del Plan Gratuito
+
+- **Límite de función**: 2048 MB de memoria por función
+- **Tiempo máximo**: 30 segundos por request
+- **Almacenamiento**: Sistema de archivos temporal (se pierde entre deployments)
+  - *Nota*: Tu SQLite database se recreará en cada deploy. Para producción, usar MySQL/PostgreSQL.
+
+## 🔄 Actualizar en Vercel
+
+Simplemente haz push a tu repositorio:
+
+```bash
+git add .
+git commit -m "Tu mensaje"
+git push origin main  # o develop, según tu rama
+```
+
+Vercel automáticamente detectará los cambios y desplegará.
+
+## 📞 Soporte
+
+Si algo aún no funciona:
+
+1. Revisa los logs en Vercel (Functions → api/index.php → Logs)
+2. Verifica que todas las variables de entorno están configuradas
+3. Asegúrate de que el APP_URL es exacto (incluyendo https://)
+4. Intenta un "Redeploy" desde un deployment exitoso anterior
+

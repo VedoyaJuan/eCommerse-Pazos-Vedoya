@@ -8,23 +8,9 @@ $basePath = dirname(__DIR__);
 
 // Configure for Vercel serverless environment
 if (getenv('VERCEL')) {
-    // Set configuration cache path to a temporary writable location
-    if (!getenv('APP_CONFIG_CACHE')) {
-        putenv('APP_CONFIG_CACHE=/tmp/laravel-config.php');
-    }
-    
-    // Clean bootstrap cache files that might be corrupted
-    $cacheDir = $basePath . '/bootstrap/cache';
-    if (is_dir($cacheDir)) {
-        $filesToDelete = ['services.php', 'packages.php'];
-        
-        foreach ($filesToDelete as $file) {
-            $path = $cacheDir . '/' . $file;
-            if (file_exists($path) && is_file($path)) {
-                @unlink($path);
-            }
-        }
-    }
+    // Don't use config cache in Vercel - load from files directly
+    // This is more reliable than managing cache files in serverless
+    putenv('APP_CONFIG_CACHE=');
 }
 
 return Application::configure(basePath: $basePath)
