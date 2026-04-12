@@ -2,6 +2,8 @@ node_modules
 npm-debug.log
 yarn-error.log
 .git
+.gitignore
+.gitattributes
 .env
 .env.local
 .env.*.local
@@ -11,13 +13,6 @@ yarn-error.log
 *.swo
 *~
 .DS_Store
-storage/logs/*
-!storage/logs/.gitkeep
-storage/framework/sessions/*
-!storage/framework/sessions/.gitkeep
-storage/framework/views/*
-!storage/framework/views/.gitkeep
-storage/framework/cache/*
-!storage/framework/cache/.gitkeep
-database/database.sqlite
 tests/
+README.md
+phpunit.xml
