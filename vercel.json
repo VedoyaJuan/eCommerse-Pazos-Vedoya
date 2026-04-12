@@ -1,7 +1,6 @@
 {
     "version": 2,
-    "buildCommand": "composer install --optimize-autoloader && npm install && npm run build",
-    "env": {
+        "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
         "LOG_STACK": "stderr",
