@@ -6,11 +6,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 $basePath = dirname(__DIR__);
 
-// Disable config cache in Vercel to avoid getCachedConfigPath() issues
-if (getenv('VERCEL')) {
-    putenv('APP_CONFIG_CACHE=');
-}
-
 return Application::configure(basePath: $basePath)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',

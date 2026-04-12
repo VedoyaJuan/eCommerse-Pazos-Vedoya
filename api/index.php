@@ -1,8 +1,8 @@
 <?php
 
 if (getenv('VERCEL')) {
-    // Disable config cache BEFORE including public/index.php
-    putenv('APP_CONFIG_CACHE=');
+    // Use bootstrap cache config file that always exists
+    putenv('APP_CONFIG_CACHE=' . __DIR__ . '/../bootstrap/cache/config.php');
     putenv('LOG_STACK=stderr');
     
     // Ensure storage directory is writable
