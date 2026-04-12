@@ -1,103 +1,68 @@
-# Guía de Despliegue en Vercel (Plan Gratuito)
+# Despliegue en Vercel
 
-Este proyecto está configurado para ejecutarse en Vercel plan gratuito (Hobby).
+## Variables de entorno requeridas en el dashboard de Vercel
 
-## 🚀 Pasos para Desplegar
+Ve a tu proyecto → **Settings → Environment Variables** y agrega SOLO estas dos (el resto ya está en `vercel.json`):
 
-### 1. Conectar el Repositorio a Vercel
+| Variable | Valor |
+|----------|-------|
+| `APP_KEY` | `base64:j9ZO4sYg+Rb8nlALyEJ8APthM0w5vCBzwqeKAPjvf4g=` |
+| `APP_URL` | `https://TU-PROYECTO.vercel.app` |
 
-1. Ve a [vercel.com](https://vercel.com) e inicia sesión
-2. Haz clic en "Add New..." → "Project"
-3. Selecciona "Import Git Repository"
-4. Selecciona tu repositorio de GitHub (eCommerse-Pazos-Vedoya)
-5. Haz clic en "Import"
+> **Importante:** Reemplaza `TU-PROYECTO` con el nombre real de tu proyecto en Vercel.
 
-### 2. Configurar Variables de Entorno
+---
 
-Vercel abrirá la página de configuración del proyecto automáticamente. Si no es así:
+## Variables ya configuradas automáticamente (via `vercel.json`)
 
-1. Ve a tu proyecto en Vercel
-2. Haz clic en "Settings" → "Environment Variables"
-3. Agrega las siguientes variables:
+Estas NO hace falta agregarlas en el dashboard, ya están en el repo:
 
 ```
-APP_NAME=Laravel
 APP_ENV=production
-APP_KEY=base64:j9ZO4sYg+Rb8nlALyEJ8APthM0w5vCBzwqeKAPjvf4g=
 APP_DEBUG=false
-APP_URL=https://[TU-PROJECT-NAME].vercel.app
-APP_LOCALE=en
-LOG_CHANNEL=stack
-LOG_STACK=stderr
-LOG_LEVEL=warning
-DB_CONNECTION=sqlite
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-CACHE_STORE=file
-FILESYSTEM_DISK=local
+LOG_CHANNEL=stderr
+VIEW_COMPILED_PATH=/tmp
+CACHE_STORE=array
+SESSION_DRIVER=cookie
 QUEUE_CONNECTION=sync
-BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
 ```
 
-**IMPORTANTE:** 
-- Reemplaza `[TU-PROJECT-NAME]` con el nombre de tu proyecto en Vercel
-- El `APP_URL` debe ser exactamente: `https://[TU-PROJECT-NAME].vercel.app`
-- Mantén el `APP_KEY` que está generado
+---
 
-### 3. Verificar Configuración de Build
+## Por qué estas configuraciones para Vercel (serverless)
 
-1. En Settings, ve a "Build & Development Settings"
-2. Verifica que:
-   - **Framework Preset**: `Other` (si no está auto-detectado)
-   - **Build Command**: (puede estar vacío - Vercel usará el de vercel.json)
-   - **Output Directory**: `public`
-   - **Install Command**: (puede estar vacío - Vercel usará el de vercel.json)
+| Variable | Valor | Motivo |
+|----------|-------|--------|
+| `LOG_CHANNEL=stderr` | `stderr` | Vercel captura stderr. El filesystem es de solo lectura. |
+| `VIEW_COMPILED_PATH=/tmp` | `/tmp` | `/tmp` es el único dir escribible en Vercel. Blade compila vistas aquí. |
+| `CACHE_STORE=array` | `array` | Sin filesystem escribible, cache en memoria por request. |
+| `SESSION_DRIVER=cookie` | `cookie` | Sin filesystem escribible, sesiones en cookie encriptada. |
 
-3. Haz clic en "Save"
+---
 
-### 4. Desplegar
+## Pasos para desplegar
 
-1. Haz clic en "Deploy"
-2. Espera a que se complete el build (esto puede tomar 2-3 minutos)
-3. Una vez completado, verás un link a tu aplicación
+1. **Conectar repo**: Ve a [vercel.com](https://vercel.com) → New Project → Import desde GitHub
+2. **Agregar env vars**: Como se indica arriba (solo `APP_KEY` y `APP_URL`)
+3. **Deploy**: Vercel detecta el `vercel.json` automáticamente. Clic en Deploy.
 
-## 📋 Verificación Post-Despliegue
+---
 
-Una vez desplegado, verifica:
+## Solución de problemas
 
-1. **Accede a la URL**: Debería mostrar tu página de inicio
-2. **Revisa los Logs**: 
-   - En Vercel, ve a "Deployments"
-   - Selecciona el último deployment
-   - Ve a "Functions" → "api/index.php"
-   - Haz clic en "Logs" para ver los logs en tiempo real
+### 500 en logs con `Blade compiler` o `realpath... false`
+El directorio `storage/framework/views` no existe en Vercel. Ya resuelto con `VIEW_COMPILED_PATH=/tmp` y `config/view.php`.
 
-## 🔧 Solución de Problemas Comunes
+### 500 sin mensaje de error
+Verificar que `APP_KEY` esté cargado en las env vars del dashboard de Vercel.
 
-### Error: "Build command failed"
+### Error de filesystem / logs
+El filesystem de Vercel es de solo lectura excepto `/tmp`. Ya resuelto con `LOG_CHANNEL=stderr`.
 
-**Causa**: El buildCommand en vercel.json está causando problemas
+### Ver logs en tiempo real
+Vercel Dashboard → Deployments → Functions → `api/index.php` → Logs
 
-**Solución**: El archivo ya está configurado correctamente. Si persiste:
-1. Elimina el build actual
-2. Ve a "Deployments" → "Redeploy" del último deployment exitoso
-3. O haz un nuevo push a tu rama principal
-
-### Error: "Failed to open stream: No such file or directory"
-
-**Causa**: Ya fue resuelto. La configuración ahora no usa config cache en Vercel.
-
-**Solución**: Ve a Settings → Redeploy
-
-### Error: "Class 'config' does not exist"
-
-**Causa**: Problema de configuración
-
-**Solución**: Verifica que todas las variables de entorno en el paso 2 estén correctas
-
-### Página muestra errores en Vercel pero funciona localmente
-
-1. Ve a "Deployments" → "Functions" → "api/index.php" → "Logs"
 2. Busca líneas rojas (errores)
 3. Lee el mensaje de error completo
 4. Agrega la variable faltante a Environment Variables si es necesario
