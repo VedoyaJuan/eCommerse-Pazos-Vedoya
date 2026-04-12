@@ -1,9 +1,9 @@
 <?php
 
 if (getenv('VERCEL')) {
-    putenv('LOG_STACK=stderr');
-    // Disable config cache in Vercel to avoid getCachedConfigPath() issues
+    // Disable config cache BEFORE including public/index.php
     putenv('APP_CONFIG_CACHE=');
+    putenv('LOG_STACK=stderr');
     
     // Ensure storage directory is writable
     $storagePath = __DIR__ . '/../storage';

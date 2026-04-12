@@ -5,6 +5,11 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Disable config cache in Vercel to avoid getCachedConfigPath() issues
+if (getenv('VERCEL')) {
+    putenv('APP_CONFIG_CACHE=');
+}
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
