@@ -5,10 +5,24 @@ if (getenv('VERCEL')) {
     putenv('APP_CONFIG_CACHE=' . __DIR__ . '/../bootstrap/cache/config.php');
     putenv('LOG_STACK=stderr');
     
+    // Make bootstrap/cache directory writable for PackageManifest
+    $cacheDir = __DIR__ . '/../bootstrap/cache';
+    if (is_dir($cacheDir)) {
+        @chmod($cacheDir, 0777);
+        @chmod($cacheDir . '/config.php', 0666);
+        @chmod($cacheDir . '/packages.php', 0666);
+    }
+    
     // Ensure storage directory is writable
     $storagePath = __DIR__ . '/../storage';
     if (is_dir($storagePath)) {
         @chmod($storagePath, 0777);
+        foreach (['app', 'framework', 'logs'] as $dir) {
+            $path = $storagePath . '/' . $dir;
+            if (is_dir($path)) {
+                @chmod($path, 0777);
+            }
+        }
     }
 }
 
