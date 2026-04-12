@@ -13,8 +13,7 @@
         "api/index.php": {
             "runtime": "vercel-php@0.8.0",
             "maxDuration": 30,
-            "memory": 3008,
-            "laravelBuildCommand": "php artisan config:cache && php artisan clear-compiled"
+            "memory": 3008
         }
     },
     "routes": [
