@@ -6,7 +6,7 @@ Ve a tu proyecto → **Settings → Environment Variables** y agrega SOLO estas 
 
 | Variable | Valor |
 |----------|-------|
-| `APP_KEY` | `base64:j9ZO4sYg+Rb8nlALyEJ8APthM0w5vCBzwqeKAPjvf4g=` |
+| `APP_KEY` | `` |
 | `APP_URL` | `https://TU-PROYECTO.vercel.app` |
 
 > **Importante:** Reemplaza `TU-PROYECTO` con el nombre real de tu proyecto en Vercel.
