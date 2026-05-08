@@ -5,8 +5,22 @@ require __DIR__ . '/../vendor/autoload.php';
 
 // Set environment variables for Vercel
 if (getenv('VERCEL')) {
-    putenv('APP_CONFIG_CACHE=' . __DIR__ . '/../bootstrap/cache/config.php');
     putenv('LOG_CHANNEL=stderr');
+    
+    // Clear bootstrap cache to prevent Pail provider issue
+    $cacheFiles = [
+        __DIR__ . '/../bootstrap/cache/services.php',
+        __DIR__ . '/../bootstrap/cache/packages.php',
+        __DIR__ . '/../bootstrap/cache/config.php'
+    ];
+    foreach ($cacheFiles as $file) {
+        if (file_exists($file)) {
+            @unlink($file);
+        }
+    }
+    
+    // Disable config cache on first load to allow clean bootstrap
+    // putenv('APP_CONFIG_CACHE=' . __DIR__ . '/../bootstrap/cache/config.php');
     
     // Initialize database on first request
     $lockFile = '/tmp/db.initialized';
@@ -30,6 +44,9 @@ if (getenv('VERCEL')) {
                 } catch (\Exception $e) {
                     error_log('Migration error: ' . $e->getMessage());
                 }
+                
+                // Mark database as initialized
+                touch($lockFile);
             }
             flock($initLock, LOCK_UN);
             fclose($initLock);
