@@ -29,6 +29,5 @@
             "dest": "/api/index.php"
         }
     ],
-    "outputDirectory": "public",
-    "buildCommand": "composer install --no-dev --prefer-dist && php artisan config:cache && php artisan route:cache && mkdir -p /tmp && touch /tmp/database.sqlite && php artisan migrate --force --database=sqlite"
+    "outputDirectory": "public"
 }
