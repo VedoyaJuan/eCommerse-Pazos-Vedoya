@@ -29,5 +29,6 @@
             "dest": "/api/index.php"
         }
     ],
-    "outputDirectory": "public"
+    "outputDirectory": "public",
+    "buildCommand": "bash build.sh"
 }
