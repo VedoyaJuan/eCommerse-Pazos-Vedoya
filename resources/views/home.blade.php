@@ -1,87 +1,59 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tic-Tac Store | Bienvenida</title>
+@extends('layouts.store')
 
-    <!-- Tailwind CSS (CDN para asegurar los estilos si no está corriendo npm run dev) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+@section('title', 'Catálogo | Tic-Tac Store')
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+@section('content')
+<div class="bg-zinc-900 py-20 text-center mb-12">
+    <h1 class="text-4xl md:text-5xl font-light text-white tracking-widest mb-4 uppercase">
+        Explora la <span class="font-semibold text-amber-500">Colección</span>
+    </h1>
+    <p class="text-zinc-400 max-w-2xl mx-auto font-light">
+        Descubre nuestra selección de relojes de alta gama, diseñados para acompañarte en cada segundo de tu vida con precisión y elegancia.
+    </p>
+</div>
 
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-        }
-        h1, h2 {
-            font-family: 'Playfair Display', serif;
-        }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col items-center justify-center p-6 bg-[url('https://images.unsplash.com/photo-1548169874-53ce86f44026?auto=format&fit=crop&q=80&w=2000')] bg-cover bg-center">
-    
-    <!-- Overlay oscuro -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-
-    <div class="relative z-10 w-full max-w-3xl bg-white/10 backdrop-blur-md border border-white/20 p-10 md:p-14 rounded-2xl shadow-2xl text-center text-white">
-        
-        <!-- Logo / Icono -->
-        <div class="flex justify-center mb-6">
-            <svg class="w-16 h-16 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        </div>
-
-        <!-- Título Principal -->
-        <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-wide text-white drop-shadow-md">
-            Tic-Tac <span class="text-amber-400">Store</span>
-        </h1>
-        <p class="text-lg md:text-xl font-light tracking-widest uppercase mb-10 text-slate-300">
-            Relojería Online de Alta Gama
-        </p>
-
-        <div class="w-24 h-1 bg-amber-400 mx-auto mb-10 rounded-full"></div>
-
-        <!-- Información Académica -->
-        <div class="bg-black/30 md:bg-transparent rounded-xl p-6 md:p-0">
-            <h2 class="text-2xl font-semibold mb-2 text-amber-300">Proyecto Universitario</h2>
-            <p class="text-slate-200 mb-6 font-medium">Materia: Aplicaciones Web <br> <span class="text-sm font-normal text-slate-300">Universidad Nacional de la Patagonia San Juan Bosco (UNPSJB)</span></p>
-            
-            <h3 class="text-lg font-semibold text-white mb-2 uppercase tracking-wide">Integrantes</h3>
-            <ul class="flex flex-col md:flex-row justify-center gap-2 md:gap-8 text-slate-200 font-medium text-lg">
-                <li class="flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    Vedoya Juan Pablo
-                </li>
-                <li class="flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    Pazos Sebastian Luis
-                </li>
-            </ul>
-        </div>
-
-        <!-- Botones de Acción (Opcional) -->
-        <div class="mt-12 flex justify-center gap-4">
-            @if (Route::has('login'))
-                @auth
-                    <a href="{{ url('/dashboard') }}" class="px-8 py-3 bg-amber-500 hover:bg-amber-600 transition-colors text-slate-900 font-semibold rounded-lg shadow-lg">Ir al Dashboard</a>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+        @forelse($products as $product)
+        <div class="group flex flex-col bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-zinc-100">
+            <a href="{{ route('store.show', $product) }}" class="relative aspect-square overflow-hidden bg-zinc-100 block">
+                @if($product->image_url)
+                    <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out">
                 @else
-                    <a href="{{ route('login') }}" class="px-8 py-3 border-2 border-amber-400 text-amber-400 hover:bg-amber-400 hover:text-slate-900 transition-colors font-semibold rounded-lg">Iniciar Sesión</a>
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="px-8 py-3 bg-white/10 hover:bg-white/20 transition-colors border border-white/30 font-semibold rounded-lg">Registrarse</a>
-                    @endif
-                @endauth
-            @endif
+                    <div class="w-full h-full flex items-center justify-center text-zinc-300">
+                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                @endif
+                <div class="absolute top-4 left-4">
+                    <span class="bg-white/90 backdrop-blur-sm text-zinc-900 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">
+                        {{ $product->brand ?? 'Luxury' }}
+                    </span>
+                </div>
+            </a>
+            <div class="p-6 flex flex-col flex-grow">
+                <a href="{{ route('store.show', $product) }}" class="block mb-2 group-hover:text-amber-600 transition-colors">
+                    <h3 class="text-lg font-medium text-zinc-900 leading-tight">{{ $product->name }}</h3>
+                </a>
+                <p class="text-zinc-500 text-sm line-clamp-2 mb-4 font-light">{{ $product->description }}</p>
+                <div class="mt-auto flex items-center justify-between">
+                    <span class="text-xl font-semibold text-zinc-900">${{ number_format($product->price, 2) }}</span>
+                    <a href="{{ route('store.show', $product) }}" class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 text-zinc-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </a>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="relative z-10 mt-8 text-sm text-slate-400 font-light text-center">
-        &copy; 2026 Tic-Tac Store. Todos los derechos reservados.
+        @empty
+        <div class="col-span-full py-12 text-center text-zinc-500">
+            No hay relojes disponibles en este momento.
+        </div>
+        @endforelse
     </div>
 
-</body>
-</html>
+    @if($products->hasPages())
+    <div class="mt-16 flex justify-center">
+        {{ $products->links() }}
+    </div>
+    @endif
+</div>
+@endsection
