@@ -13,8 +13,13 @@
         "SESSION_DRIVER": "cookie",
         "QUEUE_CONNECTION": "sync",
         "FILESYSTEM_DISK": "local",
-        "DB_CONNECTION": "sqlite",
-        "DB_DATABASE": "/tmp/database.sqlite"
+        "DB_CONNECTION": "pgsql",
+        "DB_HOST": "ep-sparkling-forest-aclc8rhl.sa-east-1.aws.neon.tech",
+        "DB_PORT": "5432",
+        "DB_DATABASE": "neondb",
+        "DB_USERNAME": "neondb_owner",
+        "DB_PASSWORD": "npg_SOg7iMlZDr8I",
+        "DB_SSLMODE": "require"
     },
     "functions": {
         "api/index.php": {
