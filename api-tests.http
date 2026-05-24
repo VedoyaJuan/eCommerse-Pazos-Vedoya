@@ -1,0 +1,146 @@
+# Tic-Tac Store — API Tests
+# Requiere la extensión "REST Client" de VS Code (humao.rest-client)
+#
+# Uso:
+#   1. Cambia @baseUrl si corrés en otro puerto
+#   2. Ejecutá "### Register" primero para obtener un token
+#   3. Pegá el token devuelto en @token
+#   4. Ya podés correr los demás requests autenticados
+
+@baseUrl = http://localhost:8000/api
+@token = 3|Q74H4CPOQRhQlLGCHEM6LEZZ6xhAOLhmGybSoENJ6ebd3418
+
+###############################################################################
+# AUTH
+###############################################################################
+
+### Register — Crear cuenta nueva
+# @name register
+POST {{baseUrl}}/register
+Content-Type: application/json
+
+{
+  "name": "Juan Test",
+  "email": "juan@test.com",
+  "password": "password123",
+  "password_confirmation": "password123"
+}
+
+###
+
+### Login — Iniciar sesión
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "juan@test.com",
+  "password": "password123"
+}
+
+###
+
+### Usuario autenticado
+GET {{baseUrl}}/user
+Authorization: Bearer {{token}}
+
+###
+
+### Logout
+POST {{baseUrl}}/logout
+Authorization: Bearer {{token}}
+
+###############################################################################
+# PRODUCTOS
+###############################################################################
+
+### Listar todos los productos (paginado)
+GET {{baseUrl}}/products
+
+###
+
+### Listar productos con filtros
+GET {{baseUrl}}/products?search=casio&in_stock=true&max_price=100000
+
+###
+
+### Filtrar por marca
+GET {{baseUrl}}/products?brand=Seiko
+
+###
+
+### Detalle de un producto (cambiar el ID)
+GET {{baseUrl}}/products/1
+
+###############################################################################
+# PEDIDOS
+###############################################################################
+
+### Crear un pedido
+# Ajustá los product_id con IDs reales de tu base de datos
+POST {{baseUrl}}/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "customer_name": "Juan Test",
+  "customer_email": "juan@test.com",
+  "customer_phone": "3814001234",
+  "shipping_address": "Av. Siempreviva 742, Tucumán",
+  "notes": "Dejar en portería",
+  "items": [
+    { "product_id": 1, "quantity": 1 }
+  ]
+}
+
+###
+
+### Mis pedidos
+GET {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+
+###
+
+### Detalle de un pedido (cambiar el ID)
+GET {{baseUrl}}/orders/1
+Authorization: Bearer {{token}}
+
+###############################################################################
+# ERRORES ESPERADOS (para verificar validaciones)
+###############################################################################
+
+### Login con credenciales incorrectas → 422
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "noexiste@mail.com",
+  "password": "wrong"
+}
+
+###
+
+### Crear pedido sin token → 401
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "customer_name": "Anon",
+  "customer_email": "anon@mail.com",
+  "shipping_address": "Sin dirección",
+  "items": [{ "product_id": 1, "quantity": 1 }]
+}
+
+###
+
+### Crear pedido con stock insuficiente → 422
+POST {{baseUrl}}/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "customer_name": "Juan Test",
+  "customer_email": "juan@test.com",
+  "shipping_address": "Av. Test 123",
+  "items": [{ "product_id": 1, "quantity": 99999 }]
+}
