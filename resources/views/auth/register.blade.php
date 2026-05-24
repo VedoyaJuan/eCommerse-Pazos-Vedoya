@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión — Tic-Tac Store</title>
+    <title>Registrarse — Tic-Tac Store</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,22 +17,37 @@
         {{-- Brand --}}
         <div class="text-center mb-8">
             <h1 class="text-2xl font-semibold text-white tracking-widest uppercase">Tic-Tac Store</h1>
-            <p class="mt-2 text-slate-400 text-sm font-light">Panel de administración</p>
+            <p class="mt-2 text-slate-400 text-sm font-light">Creá tu cuenta de vendedor</p>
         </div>
-
-        @if (session('success'))
-            <div class="mb-4 p-4 bg-green-900/40 border border-green-700 text-green-300 text-sm rounded-xl">
-                {{ session('success') }}
-            </div>
-        @endif
 
         {{-- Card --}}
         <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl p-8">
 
-            <h2 class="text-lg font-medium text-white mb-6">Iniciar sesión</h2>
+            <h2 class="text-lg font-medium text-white mb-6">Registro</h2>
 
-            <form method="POST" action="{{ route('login') }}" novalidate>
+            <form method="POST" action="{{ route('register') }}" novalidate>
                 @csrf
+
+                {{-- Name --}}
+                <div class="mb-5">
+                    <label for="name" class="block text-sm font-medium text-slate-300 mb-1.5">
+                        Nombre completo
+                    </label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        value="{{ old('name') }}"
+                        required
+                        autofocus
+                        autocomplete="name"
+                        class="w-full px-4 py-2.5 bg-slate-900 border {{ $errors->has('name') ? 'border-red-500' : 'border-slate-600' }} text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                        placeholder="Tu nombre"
+                    >
+                    @error('name')
+                        <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 {{-- Email --}}
                 <div class="mb-5">
@@ -45,10 +60,9 @@
                         name="email"
                         value="{{ old('email') }}"
                         required
-                        autofocus
                         autocomplete="email"
                         class="w-full px-4 py-2.5 bg-slate-900 border {{ $errors->has('email') ? 'border-red-500' : 'border-slate-600' }} text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-                        placeholder="admin@ejemplo.com"
+                        placeholder="tu@email.com"
                     >
                     @error('email')
                         <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
@@ -56,7 +70,7 @@
                 </div>
 
                 {{-- Password --}}
-                <div class="mb-6">
+                <div class="mb-5">
                     <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">
                         Contraseña
                     </label>
@@ -65,26 +79,29 @@
                         id="password"
                         name="password"
                         required
-                        autocomplete="current-password"
+                        autocomplete="new-password"
                         class="w-full px-4 py-2.5 bg-slate-900 border {{ $errors->has('password') ? 'border-red-500' : 'border-slate-600' }} text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
-                        placeholder="••••••••"
+                        placeholder="Mínimo 8 caracteres"
                     >
                     @error('password')
                         <p class="mt-1.5 text-xs text-red-400">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Remember me --}}
-                <div class="flex items-center mb-6">
-                    <input
-                        type="checkbox"
-                        id="remember"
-                        name="remember"
-                        class="w-4 h-4 rounded border-slate-600 bg-slate-900 text-slate-400 focus:ring-slate-500 focus:ring-offset-slate-800"
-                    >
-                    <label for="remember" class="ml-2 text-sm text-slate-400 select-none">
-                        Recordarme
+                {{-- Confirm Password --}}
+                <div class="mb-6">
+                    <label for="password_confirmation" class="block text-sm font-medium text-slate-300 mb-1.5">
+                        Confirmar contraseña
                     </label>
+                    <input
+                        type="password"
+                        id="password_confirmation"
+                        name="password_confirmation"
+                        required
+                        autocomplete="new-password"
+                        class="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 text-white text-sm rounded-lg placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                        placeholder="Repetí tu contraseña"
+                    >
                 </div>
 
                 {{-- Submit --}}
@@ -92,16 +109,16 @@
                     type="submit"
                     class="w-full py-2.5 bg-white text-slate-900 font-semibold text-sm rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors"
                 >
-                    Ingresar
+                    Registrarme
                 </button>
 
             </form>
         </div>
 
-        {{-- Register link --}}
+        {{-- Back to login --}}
         <p class="mt-6 text-center text-sm text-slate-400">
-            ¿No tenés cuenta?
-            <a href="{{ route('register') }}" class="text-white hover:underline font-medium">Registrate</a>
+            ¿Ya tenés cuenta?
+            <a href="{{ route('login') }}" class="text-white hover:underline font-medium">Iniciá sesión</a>
         </p>
 
     </div>
