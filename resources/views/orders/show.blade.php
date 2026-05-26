@@ -10,6 +10,7 @@
         'shipped'    => ['label' => 'Enviado',     'class' => 'bg-indigo-100 text-indigo-800'],
         'delivered'  => ['label' => 'Entregado',   'class' => 'bg-green-100 text-green-800'],
         'cancelled'  => ['label' => 'Cancelado',   'class' => 'bg-red-100 text-red-800'],
+        'anulado'    => ['label' => 'Anulado',     'class' => 'bg-gray-200 text-gray-700'],
     ];
     $badge = $statusMap[$order->status] ?? ['label' => $order->status, 'class' => 'bg-gray-100 text-gray-800'];
 @endphp
@@ -65,20 +66,12 @@
                     <option value="shipped"    {{ $order->status === 'shipped'    ? 'selected' : '' }}>Enviado</option>
                     <option value="delivered"  {{ $order->status === 'delivered'  ? 'selected' : '' }}>Entregado</option>
                     <option value="cancelled"  {{ $order->status === 'cancelled'  ? 'selected' : '' }}>Cancelado</option>
+                    <option value="anulado"    {{ $order->status === 'anulado'    ? 'selected' : '' }}>Anulado</option>
                 </select>
                 <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
                     Actualizar estado
                 </button>
             </form>
-            <div class="pt-2 border-t border-gray-100">
-                <form action="{{ route('orders.destroy', $order) }}" method="POST" onsubmit="return confirm('¿Eliminar este pedido permanentemente?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="w-full border border-red-300 text-red-600 hover:bg-red-50 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                        Eliminar pedido
-                    </button>
-                </form>
-            </div>
         </div>
 
         <!-- Resumen de totales -->

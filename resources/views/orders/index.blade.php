@@ -25,6 +25,7 @@
                     <option value="shipped"     {{ request('status') === 'shipped'     ? 'selected' : '' }}>Enviado</option>
                     <option value="delivered"   {{ request('status') === 'delivered'   ? 'selected' : '' }}>Entregado</option>
                     <option value="cancelled"   {{ request('status') === 'cancelled'   ? 'selected' : '' }}>Cancelado</option>
+                    <option value="anulado"     {{ request('status') === 'anulado'     ? 'selected' : '' }}>Anulado</option>
                 </select>
             </div>
             <div class="flex gap-2 w-full md:w-auto">
@@ -59,6 +60,7 @@
                         'shipped'    => ['label' => 'Enviado',     'class' => 'bg-indigo-100 text-indigo-800'],
                         'delivered'  => ['label' => 'Entregado',   'class' => 'bg-green-100 text-green-800'],
                         'cancelled'  => ['label' => 'Cancelado',   'class' => 'bg-red-100 text-red-800'],
+                        'anulado'    => ['label' => 'Anulado',     'class' => 'bg-gray-200 text-gray-700'],
                     ];
                     $badge = $statusMap[$order->status] ?? ['label' => $order->status, 'class' => 'bg-gray-100 text-gray-800'];
                 @endphp
@@ -75,13 +77,8 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                    <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
+                    <td class="px-6 py-4 text-right text-sm font-medium">
                         <a href="{{ route('orders.show', $order) }}" class="text-indigo-600 hover:text-indigo-900 transition-colors">Ver</a>
-                        <form action="{{ route('orders.destroy', $order) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Eliminar este pedido?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900 transition-colors">Eliminar</button>
-                        </form>
                     </td>
                 </tr>
                 @empty

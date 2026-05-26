@@ -22,7 +22,7 @@ Route::middleware('auth')->group(function () {
 
     // Admin routes
     Route::resource('products', ProductController::class);
-    Route::resource('orders', OrderController::class)->only(['index', 'show', 'update', 'destroy']);
+    Route::resource('orders', OrderController::class)->only(['index', 'show', 'update']);
 
     // Admin-only: user management
     Route::middleware('admin')->group(function () {
