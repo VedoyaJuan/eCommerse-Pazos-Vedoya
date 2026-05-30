@@ -13,8 +13,9 @@
         "SESSION_DRIVER": "cookie",
         "QUEUE_CONNECTION": "sync",
         "FILESYSTEM_DISK": "local",
-        "DB_CONNECTION": "sqlite",
-        "DB_DATABASE": "/tmp/database.sqlite"
+        "DB_CONNECTION": "pgsql",
+        "DB_PORT": "5432",
+        "DB_SSLMODE": "require"
     },
     "functions": {
         "api/index.php": {

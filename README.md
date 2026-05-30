@@ -11,10 +11,13 @@
 Tic-Tac Store es una empresa ficticia especializada en la venta online de relojes de alta gama, diseñada como proyecto final para la materia de Aplicaciones Web de la UNPSJB.
 
 ## Tecnologías Utilizadas
-- Laravel Framework
-- PHP
-- MongoDB
-- HTML/CSS/JavaScript
+- **Laravel 11** — Framework PHP para el backend y rutas web/API
+- **PHP 8.2+**
+- **PostgreSQL (Neon)** — Base de datos principal alojada en Neon (serverless Postgres)
+- **Laravel Sanctum** — Autenticación de la API mediante tokens (en pruebas para siguiente fase)
+- **TailwindCSS** — Estilos y diseño del frontend
+- **Vite** — Bundler y compilación de assets
+- **HTML / JavaScript**
 
 ## Características del Proyecto
 - Catálogo de productos con filtros y búsqueda
@@ -59,8 +62,8 @@ Para correr este proyecto en tu entorno local por primera vez (o al bajar una nu
    ```
 
 5. **Acceder a la aplicación**
-   - **Tienda Pública**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-   - **Panel de Administración (ABM Productos)**: [http://127.0.0.1:8000/products](http://127.0.0.1:8000/products)
+   - **Tienda Pública (ejemplo)**: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+   - **Panel de Administración (ABM Productos, pedidos y gestión de ususarios para rol admin)**: [http://127.0.0.1:8000/products](http://127.0.0.1:8000/products)
 
 ---
 *Proyecto creado para fines educativos - Todos los derechos reservados © 2026*
