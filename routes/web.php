@@ -8,6 +8,15 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
 
 // Auth routes (public)
+Route::get('/debug-route', function (\Illuminate\Http\Request $request) {
+    return [
+        'request_uri' => $_SERVER['REQUEST_URI'] ?? null,
+        'path' => $request->path(),
+        'url' => $request->url(),
+        'fullUrl' => $request->fullUrl(),
+    ];
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
