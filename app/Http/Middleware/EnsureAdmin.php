@@ -12,6 +12,9 @@ class EnsureAdmin
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check() || Auth::user()->role !== 'admin') {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'No tenés permisos para acceder a esta sección.'], 403);
+            }
             return redirect()->route('products.index')
                 ->with('error', 'No tenés permisos para acceder a esa sección.');
         }

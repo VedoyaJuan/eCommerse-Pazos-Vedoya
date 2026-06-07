@@ -144,3 +144,127 @@ Authorization: Bearer {{token}}
   "shipping_address": "Av. Test 123",
   "items": [{ "product_id": 1, "quantity": 99999 }]
 }
+
+###############################################################################
+# GESTIÓN DE PRODUCTOS (Admin/Vendedor)
+###############################################################################
+
+### Crear producto
+POST {{baseUrl}}/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Nuevo Reloj Casio Vintage",
+  "description": "Edición retro metálica dorada",
+  "price": 75000.00,
+  "stock": 15,
+  "brand": "Casio",
+  "image_url": "https://example.com/vintage.jpg"
+}
+
+###
+
+### Actualizar producto (cambiar el ID)
+PUT {{baseUrl}}/products/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Casio G-Shock Modificado",
+  "description": "Descripción actualizada",
+  "price": 50000.00,
+  "stock": 10,
+  "brand": "Casio",
+  "image_url": "https://example.com/gshock.jpg"
+}
+
+###
+
+### Eliminar producto (cambiar el ID)
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+
+###############################################################################
+# GESTIÓN DE PEDIDOS GLOBAL (Admin/Vendedor)
+###############################################################################
+
+### Listar todos los pedidos globalmente
+GET {{baseUrl}}/admin/orders
+Authorization: Bearer {{token}}
+
+###
+
+### Listar pedidos globales con filtros
+GET {{baseUrl}}/admin/orders?status=pending&search=Juan
+Authorization: Bearer {{token}}
+
+###
+
+### Detalle de cualquier pedido
+GET {{baseUrl}}/admin/orders/1
+Authorization: Bearer {{token}}
+
+###
+
+### Actualizar estado de un pedido
+PATCH {{baseUrl}}/admin/orders/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "status": "processing"
+}
+
+###############################################################################
+# GESTIÓN DE VENDEDORES (Sólo Administrador)
+###############################################################################
+
+### Listar vendedores pendientes
+GET {{baseUrl}}/admin/users?status=pending
+Authorization: Bearer {{token}}
+
+###
+
+### Listar todos los vendedores
+GET {{baseUrl}}/admin/users?status=all
+Authorization: Bearer {{token}}
+
+###
+
+### Aprobar vendedor (cambiar el ID de usuario)
+PATCH {{baseUrl}}/admin/users/2/approve
+Authorization: Bearer {{token}}
+
+###
+
+### Rechazar vendedor (cambiar el ID de usuario)
+PATCH {{baseUrl}}/admin/users/2/reject
+Authorization: Bearer {{token}}
+
+###
+
+### Eliminar vendedor (cambiar el ID de usuario)
+DELETE {{baseUrl}}/admin/users/2
+Authorization: Bearer {{token}}
+
+###############################################################################
+# ERRORES DE AUTENTICACIÓN Y ESTADO
+###############################################################################
+
+### Login de usuario con cuenta en estado PENDING (debe fallar)
+# Para probar: registrá un mail nuevo primero, y luego intentá loguearte
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nuevo_vendedor_pendiente@test.com",
+  "password": "password123"
+}
+
+###
+
+### Petición a ruta Admin con token de rol Vendedor (debe dar 403)
+# Probá esta petición con el token de un vendedor aprobado (no admin)
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{token}}
