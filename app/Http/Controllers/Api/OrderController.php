@@ -89,4 +89,43 @@ class OrderController extends Controller
 
         return new OrderResource($order);
     }
+
+    public function adminIndex(Request $request)
+    {
+        $query = Order::with('items.product');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('customer_name', 'ilike', "%{$search}%")
+                  ->orWhere('customer_email', 'ilike', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->latest()->paginate(15);
+
+        return OrderResource::collection($orders);
+    }
+
+    public function adminShow(Order $order)
+    {
+        $order->load('items.product');
+        return new OrderResource($order);
+    }
+
+    public function adminUpdate(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,processing,shipped,delivered,cancelled,anulado',
+        ]);
+
+        $order->update(['status' => $request->status]);
+
+        $order->load('items.product');
+        return new OrderResource($order);
+    }
 }

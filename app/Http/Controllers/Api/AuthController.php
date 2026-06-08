@@ -22,11 +22,14 @@ class AuthController extends Controller
             'name'     => $data['name'],
             'email'    => $data['email'],
             'password' => Hash::make($data['password']),
+            'role'     => 'vendedor',
+            'status'   => 'pending',
         ]);
 
-        $token = $user->createToken('mobile')->plainTextToken;
-
-        return response()->json(['token' => $token, 'user' => $user], 201);
+        return response()->json([
+            'message' => 'Registro exitoso. Tu cuenta está pendiente de aprobación por un administrador.',
+            'user'    => $user
+        ], 201);
     }
 
     public function login(Request $request)
@@ -41,6 +44,18 @@ class AuthController extends Controller
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales son incorrectas.'],
+            ]);
+        }
+
+        if ($user->status === 'pending') {
+            throw ValidationException::withMessages([
+                'email' => ['Tu cuenta está pendiente de aprobación por un administrador.'],
+            ]);
+        }
+
+        if ($user->status === 'rejected') {
+            throw ValidationException::withMessages([
+                'email' => ['Tu cuenta fue rechazada. Contactá al administrador.'],
             ]);
         }
 
