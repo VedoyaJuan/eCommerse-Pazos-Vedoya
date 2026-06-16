@@ -57,13 +57,20 @@
         <!-- Cambiar estado -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Cambiar estado</h3>
+            @php
+                $isFinal = in_array($order->status, ['delivered', 'cancelled', 'anulado']);
+            @endphp
             @if($order->status === 'delivered')
                 <p class="text-sm text-green-600 font-medium bg-green-50 p-2.5 rounded-md border border-green-100">El pedido ha sido entregado y su estado ya no puede ser modificado.</p>
+            @elseif($order->status === 'cancelled')
+                <p class="text-sm text-red-600 font-medium bg-red-50 p-2.5 rounded-md border border-red-100">El pedido ha sido cancelado y su estado ya no puede ser modificado.</p>
+            @elseif($order->status === 'anulado')
+                <p class="text-sm text-gray-600 font-medium bg-gray-100 p-2.5 rounded-md border border-gray-200">El pedido ha sido anulado y su estado ya no puede ser modificado.</p>
             @endif
             <form action="{{ route('orders.update', $order) }}" method="POST" class="space-y-3">
                 @csrf
                 @method('PUT')
-                <select name="status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm border px-3 py-2 outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed" {{ $order->status === 'delivered' ? 'disabled' : '' }}>
+                <select name="status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm border px-3 py-2 outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed" {{ $isFinal ? 'disabled' : '' }}>
                     <option value="pending"    {{ $order->status === 'pending'    ? 'selected' : '' }}>Pendiente</option>
                     <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>En proceso</option>
                     <option value="shipped"    {{ $order->status === 'shipped'    ? 'selected' : '' }}>Enviado</option>
@@ -71,7 +78,7 @@
                     <option value="cancelled"  {{ $order->status === 'cancelled'  ? 'selected' : '' }}>Cancelado</option>
                     <option value="anulado"    {{ $order->status === 'anulado'    ? 'selected' : '' }}>Anulado</option>
                 </select>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed" {{ $order->status === 'delivered' ? 'disabled' : '' }}>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed" {{ $isFinal ? 'disabled' : '' }}>
                     Actualizar estado
                 </button>
             </form>
@@ -88,6 +95,10 @@
                 <div class="flex justify-between text-sm">
                     <span class="text-gray-500">Unidades</span>
                     <span class="text-gray-900">{{ $order->items->sum('quantity') }}</span>
+                </div>
+                <div class="flex justify-between text-sm border-t border-gray-100 pt-2">
+                    <span class="text-gray-500">Envío ({{ $order->shipping_option === 'delivery' ? 'Domicilio' : 'Retiro en local' }})</span>
+                    <span class="text-gray-900">${{ number_format($order->shipping_cost, 2) }}</span>
                 </div>
                 <div class="flex justify-between font-semibold text-base pt-2 border-t border-gray-100">
                     <span class="text-gray-900">Total</span>

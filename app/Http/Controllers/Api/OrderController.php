@@ -119,15 +119,31 @@ class OrderController extends Controller
 
     public function adminUpdate(Request $request, Order $order)
     {
-        if ($order->status === 'delivered') {
-            return response()->json(['message' => 'No se puede cambiar el estado de un pedido ya entregado.'], 422);
+        $finalStates = ['delivered', 'cancelled', 'anulado'];
+        if (in_array($order->status, $finalStates)) {
+            return response()->json(['message' => 'No se puede cambiar el estado de un pedido finalizado (Entregado, Cancelado o Anulado).'], 422);
         }
 
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled,anulado',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $newStatus = $request->status;
+
+        DB::transaction(function () use ($order, $newStatus) {
+            if (in_array($newStatus, ['cancelled', 'anulado'])) {
+                foreach ($order->items as $item) {
+                    if ($item->product_id) {
+                        $product = Product::lockForUpdate()->find($item->product_id);
+                        if ($product) {
+                            $product->increment('stock', $item->quantity);
+                        }
+                    }
+                }
+            }
+
+            $order->update(['status' => $newStatus]);
+        });
 
         $order->load('items.product.brand');
         return new OrderResource($order);
