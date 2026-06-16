@@ -182,6 +182,25 @@ class CartController extends Controller
         // Clear the cart
         session()->forget('cart');
 
-        return redirect()->route('orders.show', $order)->with('success', 'Pedido creado exitosamente.');
+        // Store order ID in session for success page
+        session()->put('last_order_id', $order->id);
+
+        return redirect()->route('cart.success')->with('success', 'Pedido creado exitosamente.');
+    }
+
+    /**
+     * Display the order success confirmation page.
+     */
+    public function success()
+    {
+        $orderId = session()->get('last_order_id');
+
+        if (!$orderId) {
+            return redirect()->route('home');
+        }
+
+        $order = Order::with('items.product.brand')->findOrFail($orderId);
+
+        return view('cart.success', compact('order'));
     }
 }

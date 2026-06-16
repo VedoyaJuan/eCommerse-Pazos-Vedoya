@@ -40,14 +40,17 @@ class OrderController extends Controller
             'customer_email'   => 'required|email|max:255',
             'customer_phone'   => 'nullable|string|max:50',
             'shipping_address' => 'required|string|max:500',
+            'shipping_option'  => 'nullable|in:pickup,delivery',
+            'shipping_cost'    => 'nullable|numeric|min:0',
             'notes'            => 'nullable|string|max:1000',
             'items'            => 'required|array|min:1',
             'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
         ]);
 
-        $order = DB::transaction(function () use ($data, $request) {
-            $total = 0;
+        $order = DB::transaction(function () use ($data) {
+            $shippingCost = (float) ($data['shipping_cost'] ?? 0.00);
+            $total = $shippingCost;
             $lines = [];
 
             foreach ($data['items'] as $line) {
@@ -70,13 +73,15 @@ class OrderController extends Controller
             }
 
             $order = Order::create([
-                'user_id'          => $request->user()->id,
+                'user_id'          => auth('sanctum')->id(),
                 'status'           => 'pending',
                 'total'            => $total,
                 'customer_name'    => $data['customer_name'],
                 'customer_email'   => $data['customer_email'],
                 'customer_phone'   => $data['customer_phone'] ?? null,
                 'shipping_address' => $data['shipping_address'],
+                'shipping_option'  => $data['shipping_option'] ?? 'pickup',
+                'shipping_cost'    => $shippingCost,
                 'notes'            => $data['notes'] ?? null,
             ]);
 

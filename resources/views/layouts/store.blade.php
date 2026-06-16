@@ -19,11 +19,26 @@
                 <svg class="w-8 h-8 text-slate-900 group-hover:text-amber-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span class="text-2xl font-semibold tracking-wider uppercase text-slate-900">Tic-Tac</span>
             </a>
-            <nav class="hidden md:flex space-x-8">
+            <nav class="hidden md:flex space-x-8 items-center">
                 <a href="{{ route('home') }}" class="text-sm font-medium text-zinc-600 hover:text-amber-600 transition-colors">Catálogo</a>
-                <a href="{{ route('products.index') }}" class="text-sm font-medium text-zinc-600 hover:text-amber-600 transition-colors">Admin Panel</a>
+                @auth
+                    @if(in_array(auth()->user()->role, ['admin', 'vendedor']))
+                        <a href="{{ route('products.index') }}" class="text-sm font-medium text-zinc-600 hover:text-amber-600 transition-colors">Admin Panel</a>
+                    @endif
+                @endauth
             </nav>
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-6">
+                @auth
+                    <span class="text-xs text-zinc-500 font-medium">Hola, {{ auth()->user()->name }}</span>
+                    <form action="{{ route('logout') }}" method="POST" class="inline">
+                        @csrf
+                        <button type="submit" class="text-xs font-medium text-zinc-600 hover:text-red-600 transition-colors">Cerrar Sesión</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="text-xs font-medium text-zinc-600 hover:text-amber-600 transition-colors">Ingresar</a>
+                    <a href="{{ route('register') }}" class="text-xs font-medium text-zinc-600 hover:text-amber-600 transition-colors">Registrarse</a>
+                @endauth
+
                 <a href="{{ route('cart.index') }}" class="relative p-2 text-zinc-600 hover:text-amber-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                     @php

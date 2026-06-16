@@ -197,7 +197,7 @@ El flujo es:
 | Método | Endpoint          | Auth | Descripción                          |
 |--------|------------------|------|--------------------------------------|
 | GET    | `/orders`         | Sí   | Pedidos del usuario autenticado      |
-| POST   | `/orders`         | Sí   | Crear un nuevo pedido                |
+| POST   | `/orders`         | Opcional | Crear un nuevo pedido (Invitado/Cliente) |
 | GET    | `/orders/{id}`    | Sí   | Detalle de un pedido propio          |
 
 **Body de `POST /orders`:**
@@ -207,6 +207,8 @@ El flujo es:
   "customer_email": "juan@mail.com",
   "customer_phone": "3814001234",
   "shipping_address": "Av. Siempreviva 742, Tucumán",
+  "shipping_option": "delivery",
+  "shipping_cost": 25000.00,
   "notes": "Dejar en portería",
   "items": [
     { "product_id": 1, "quantity": 2 },
@@ -242,25 +244,60 @@ El flujo es:
 
 ---
 
+#### Carrito de Compras (Shopping Cart)
+
+| Método | Endpoint          | Auth | Descripción                          |
+|--------|------------------|------|--------------------------------------|
+| GET    | `/cart`           | Sí   | Artículos en el carrito del usuario  |
+| POST   | `/cart`           | Sí   | Agregar producto/incrementar cantidad|
+| PUT    | `/cart/{product}` | Sí   | Modificar cantidad de un producto    |
+| DELETE | `/cart/{product}` | Sí   | Eliminar un producto del carrito     |
+| POST   | `/cart/checkout`  | Sí   | Realizar pedido desde el carrito     |
+
+**Body de `POST /cart/checkout`:**
+```json
+{
+  "customer_name": "Juan Vedoya",
+  "customer_email": "juan@mail.com",
+  "customer_phone": "3814001234",
+  "shipping_address": "Av. Siempreviva 742, Tucumán",
+  "shipping_option": "delivery",
+  "shipping_cost": 25000.00,
+  "notes": "Dejar en portería"
+}
+```
+*Nota: Este endpoint no requiere la lista de ítems en el body, ya que procesa los productos almacenados en la base de datos para el usuario autenticado.*
+
+---
+
 ## Flujo completo de un pedido desde la app móvil
 
+### Opción A: Usuario Invitado (No autenticado)
 ```
-1. [App] POST /api/login → recibe token
-
-2. [App] GET /api/products?in_stock=true → muestra catálogo
-
-3. [App] Usuario agrega productos al carrito (local, en la app)
-
-4. [App] POST /api/orders  (Bearer token + body con items)
+1. [App] GET /api/products?in_stock=true → muestra catálogo
+2. [App] Usuario agrega productos al carrito (de forma local en la app)
+3. [App] POST /api/orders  (Cuerpo con items + datos personales y de envío)
          ├─ Laravel valida stock de cada producto
          ├─ Descuenta stock en una transacción
-         ├─ Crea la orden y los order_items
+         ├─ Crea la orden (user_id = null) y los order_items
          └─ Devuelve la orden creada con status "pending"
+4. [Admin] Ve y gestiona el pedido en el panel web
+```
 
-5. [Admin] Ve el nuevo pedido en /orders
-6. [Admin] Cambia el estado (processing → shipped → delivered)
-
-7. [App] GET /api/orders → cliente ve el estado actualizado de sus pedidos
+### Opción B: Usuario Registrado (Autenticado)
+```
+1. [App] POST /api/login → recibe token
+2. [App] GET /api/products?in_stock=true → muestra catálogo
+3. [App] POST /api/cart (Bearer token + product_id + quantity) → se guarda en base de datos
+4. [App] GET /api/cart → visualiza el carrito sincronizado
+5. [App] POST /api/cart/checkout (Bearer token + datos personales y de envío)
+         ├─ Laravel valida stock de los productos del carrito del usuario
+         ├─ Descuenta stock en una transacción
+         ├─ Crea la orden asociada al usuario y sus ítems
+         ├─ Vacía el carrito del usuario en la base de datos
+         └─ Devuelve la orden creada con status "pending"
+6. [Admin] Ve y gestiona el pedido en el panel web
+7. [App] GET /api/orders → cliente ve el estado de sus pedidos
 ```
 
 ---
@@ -300,6 +337,7 @@ app/
     Product.php         → Modelo de producto
     Order.php           → Modelo de pedido
     OrderItem.php       → Línea de pedido
+    CartItem.php        → Ítem de carrito (base de datos)
     User.php            → Usuario (con HasApiTokens para Sanctum)
   Http/
     Controllers/
@@ -310,10 +348,13 @@ app/
         AuthController.php        → register / login / logout
         ProductController.php     → API productos
         OrderController.php       → API pedidos
+        CartController.php        → API carrito y checkout de carrito
     Resources/
       ProductResource.php         → JSON de producto
       OrderResource.php           → JSON de pedido
       OrderItemResource.php       → JSON de ítem de pedido
+      CartItemResource.php        → JSON de ítem de carrito
+
 
 resources/views/
   layouts/

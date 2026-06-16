@@ -243,7 +243,7 @@ class OrderAndBrandTest extends TestCase
             'shipping_option' => 'pickup',
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('cart.success'));
         
         // Assert order created
         $order = Order::latest()->first();
@@ -287,7 +287,7 @@ class OrderAndBrandTest extends TestCase
             'shipping_cost' => 25200,
         ]);
 
-        $response->assertRedirect();
+        $response->assertRedirect(route('cart.success'));
         
         // Assert order created
         $order = Order::latest()->first();
@@ -411,5 +411,179 @@ class OrderAndBrandTest extends TestCase
 
         $order->refresh();
         $this->assertEquals('anulado', $order->status);
+    }
+
+    /**
+     * Test guest can add product to cart.
+     */
+    public function test_guest_can_add_product_to_cart()
+    {
+        $product = Product::create([
+            'name' => 'Casio F-91W',
+            'price' => 50000.00,
+            'stock' => 10,
+        ]);
+
+        $response = $this->post(route('cart.add', $product), [
+            'quantity' => 2,
+        ]);
+
+        $response->assertRedirect(route('cart.index'));
+        $this->assertEquals([$product->id => 2], session('cart'));
+    }
+
+    /**
+     * Test guest checkout with pickup option.
+     */
+    public function test_guest_checkout_with_pickup_option()
+    {
+        $product = Product::create([
+            'name' => 'Casio F-91W',
+            'price' => 50000.00,
+            'stock' => 10,
+        ]);
+
+        session(['cart' => [$product->id => 2]]);
+
+        $response = $this->post(route('cart.checkout'), [
+            'customer_name' => 'Guest Jane',
+            'customer_email' => 'jane@example.com',
+            'customer_phone' => '1144005678',
+            'shipping_option' => 'pickup',
+        ]);
+
+        $response->assertRedirect(route('cart.success'));
+        
+        // Assert order created and user_id is null
+        $order = Order::latest()->first();
+        $this->assertNotNull($order);
+        $this->assertNull($order->user_id);
+        $this->assertEquals('pickup', $order->shipping_option);
+        $this->assertEquals(0, $order->shipping_cost);
+        $this->assertEquals(100000.00, $order->total); // 50000 * 2 + 0
+        $this->assertEquals('Retiro en local (Sucursal)', $order->shipping_address);
+        
+        // Assert stock decremented
+        $product->refresh();
+        $this->assertEquals(8, $product->stock);
+        
+        // Assert cart cleared
+        $this->assertNull(session('cart'));
+    }
+
+    /**
+     * Test guest checkout with delivery option.
+     */
+    public function test_guest_checkout_with_delivery_option()
+    {
+        $product = Product::create([
+            'name' => 'Casio F-91W',
+            'price' => 50000.00,
+            'stock' => 10,
+        ]);
+
+        session(['cart' => [$product->id => 2]]);
+
+        $response = $this->post(route('cart.checkout'), [
+            'customer_name' => 'Guest Jane',
+            'customer_email' => 'jane@example.com',
+            'customer_phone' => '1144005678',
+            'shipping_option' => 'delivery',
+            'zip_code' => '4000',
+            'province' => 'Tucumán',
+            'city' => 'Yerba Buena',
+            'address_detail' => 'Av. Aconquija 1200',
+            'shipping_cost' => 25200,
+        ]);
+
+        $response->assertRedirect(route('cart.success'));
+        
+        // Assert order created
+        $order = Order::latest()->first();
+        $this->assertNotNull($order);
+        $this->assertNull($order->user_id);
+        $this->assertEquals('delivery', $order->shipping_option);
+        $this->assertEquals(25200.00, $order->shipping_cost);
+        $this->assertEquals(125200.00, $order->total); // 50000 * 2 + 25200
+        
+        // Assert stock decremented
+        $product->refresh();
+        $this->assertEquals(8, $product->stock);
+    }
+
+    /**
+     * Test guest can create order via API.
+     */
+    public function test_guest_can_create_order_via_api()
+    {
+        $product = Product::create([
+            'name' => 'Casio F-91W',
+            'price' => 50000.00,
+            'stock' => 10,
+        ]);
+
+        $response = $this->postJson('/api/orders', [
+            'customer_name' => 'Guest Jane',
+            'customer_email' => 'jane@example.com',
+            'customer_phone' => '1144005678',
+            'shipping_address' => 'Av. Aconquija 1200, Tucumán',
+            'shipping_option' => 'delivery',
+            'shipping_cost' => 25000.00,
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                ]
+            ],
+        ]);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('data.customer_name', 'Guest Jane')
+                 ->assertJsonPath('data.shipping_option', 'delivery')
+                 ->assertJsonPath('data.shipping_cost', 25000)
+                 ->assertJsonPath('data.total', 125000);
+
+        // Assert order created in DB and user_id is null
+        $order = Order::latest()->first();
+        $this->assertNotNull($order);
+        $this->assertNull($order->user_id);
+
+        $product->refresh();
+        $this->assertEquals(8, $product->stock);
+    }
+
+    /**
+     * Test authenticated user can create order via API.
+     */
+    public function test_authenticated_user_can_create_order_via_api()
+    {
+        $user = User::factory()->create();
+        $product = Product::create([
+            'name' => 'Casio F-91W',
+            'price' => 50000.00,
+            'stock' => 10,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', [
+            'customer_name' => 'User John',
+            'customer_email' => 'john@example.com',
+            'customer_phone' => '1144005678',
+            'shipping_address' => 'Av. Aconquija 1200, Tucumán',
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                ]
+            ],
+        ]);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('data.customer_name', 'User John')
+                 ->assertJsonPath('data.total', 100000);
+
+        // Assert order created in DB and user_id is associated with the user
+        $order = Order::latest()->first();
+        $this->assertNotNull($order);
+        $this->assertEquals($user->id, $order->user_id);
     }
 }

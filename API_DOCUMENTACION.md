@@ -130,13 +130,13 @@ La creación de pedidos cuenta con validación estricta de stock disponible medi
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/orders` | **Sí** | Cliente (Comprador) | Lista el historial de pedidos del usuario autenticado. |
 | `GET` | `/orders/{order}` | **Sí** | Cliente (Comprador) | Detalle de un pedido específico perteneciente al usuario. |
-| `POST` | `/orders` | **Sí** | Cliente (Comprador) | Registra un nuevo pedido y descuenta stock. |
+| `POST` | `/orders` | **Opcional**| Cualquiera (Invitado/Cliente) | Registra un nuevo pedido y descuenta stock. Si se envía el Bearer Token, se asocia al usuario autenticado; de lo contrario, se registra como compra de invitado. |
 | `GET` | `/admin/orders` | **Sí** | Vendedor / Admin | Lista todos los pedidos globales de la tienda. |
 | `GET` | `/admin/orders/{order}`| **Sí** | Vendedor / Admin | Detalle global de cualquier pedido. |
 | `PATCH` | `/admin/orders/{order}`| **Sí** | Vendedor / Admin | Actualiza el estado de procesamiento del pedido. |
 
 #### Ejemplo de Creación de Pedido (`POST /orders`)
-*   **Headers:** `Authorization: Bearer <token>`
+*   **Headers:** `Authorization: Bearer <token>` (Opcional: solo para vincular a un usuario registrado)
 *   **Body (JSON):**
     ```json
     {
@@ -144,6 +144,8 @@ La creación de pedidos cuenta con validación estricta de stock disponible medi
       "customer_email": "juan@example.com",
       "customer_phone": "3814001234",
       "shipping_address": "Av. Siempreviva 742, Tucumán",
+      "shipping_option": "delivery",
+      "shipping_cost": 25000.00,
       "notes": "Entregar después de las 18:00 hs",
       "items": [
         {
@@ -166,7 +168,59 @@ La creación de pedidos cuenta con validación estricta de stock disponible medi
 
 ---
 
-### 3.4. Gestión de Usuarios (Exclusivo Administrador)
+### 3.4. Carrito de Compras (Shopping Cart)
+
+Estos endpoints permiten gestionar el carrito de compras del usuario autenticado en el servidor. 
+
+> [!NOTE]
+> Para usuarios no autenticados (invitados), la gestión del carrito se realiza de forma local en el cliente (ej. `AsyncStorage` en React Native) y el pedido se completa directamente mediante `POST /orders` enviando el listado completo de items.
+
+| Método | Endpoint | Auth | Rol requerido | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/cart` | **Sí** | Autenticado | Obtiene la lista de artículos del carrito del usuario con sus subtotales. |
+| `POST` | `/cart` | **Sí** | Autenticado | Agrega un producto al carrito (o incrementa cantidad). Valida el stock disponible. |
+| `PUT` | `/cart/{product}` | **Sí** | Autenticado | Modifica la cantidad de un artículo en el carrito. |
+| `DELETE` | `/cart/{product}` | **Sí** | Autenticado | Elimina un artículo del carrito. |
+| `POST` | `/cart/checkout` | **Sí** | Autenticado | Genera un pedido a partir del carrito del usuario y lo vacía tras el éxito. |
+
+#### Ejemplo de Agregar al Carrito (`POST /cart`)
+*   **Headers:** `Authorization: Bearer <token>`
+*   **Body (JSON):**
+    ```json
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+    ```
+
+#### Ejemplo de Modificar Cantidad (`PUT /cart/{product}`)
+*   **Headers:** `Authorization: Bearer <token>`
+*   **Body (JSON):**
+    ```json
+    {
+      "quantity": 4
+    }
+    ```
+
+#### Ejemplo de Checkout desde Carrito (`POST /cart/checkout`)
+*   **Headers:** `Authorization: Bearer <token>`
+*   **Body (JSON):**
+    ```json
+    {
+      "customer_name": "Juan Pérez",
+      "customer_email": "juan@example.com",
+      "customer_phone": "3814001234",
+      "shipping_address": "Av. Siempreviva 742, Tucumán",
+      "shipping_option": "delivery",
+      "shipping_cost": 25000.00,
+      "notes": "Entregar después de las 18:00 hs"
+    }
+    ```
+    *Nota:* No es necesario enviar la lista de artículos (`items`), ya que se cargan automáticamente desde el carrito guardado en la base de datos para ese usuario.
+
+---
+
+### 3.5. Gestión de Usuarios (Exclusivo Administrador)
 
 Endpoints para auditar y autorizar a vendedores.
 

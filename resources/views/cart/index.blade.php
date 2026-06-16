@@ -90,12 +90,12 @@
                         <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Datos del Comprador</h3>
                         <div>
                             <label for="customer_name" class="block text-xs font-medium text-zinc-700">Nombre y Apellido <span class="text-red-500">*</span></label>
-                            <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name', auth()->user()->name) }}" required class="mt-1 block w-full rounded-lg border-zinc-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm border px-3 py-2 outline-none">
+                            <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name', auth()->user()?->name) }}" required class="mt-1 block w-full rounded-lg border-zinc-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm border px-3 py-2 outline-none">
                             @error('customer_name') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label for="customer_email" class="block text-xs font-medium text-zinc-700">Correo Electrónico <span class="text-red-500">*</span></label>
-                            <input type="email" name="customer_email" id="customer_email" value="{{ old('customer_email', auth()->user()->email) }}" required class="mt-1 block w-full rounded-lg border-zinc-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm border px-3 py-2 outline-none">
+                            <input type="email" name="customer_email" id="customer_email" value="{{ old('customer_email', auth()->user()?->email) }}" required class="mt-1 block w-full rounded-lg border-zinc-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 sm:text-sm border px-3 py-2 outline-none">
                             @error('customer_email') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <div>

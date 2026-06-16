@@ -2,15 +2,18 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    public function test_the_application_redirects_guest_to_login(): void
+    use RefreshDatabase;
+
+    public function test_the_application_loads_catalog_for_guest(): void
     {
+        $this->withoutVite();
         $response = $this->get('/');
 
-        $response->assertRedirect('/login');
+        $response->assertStatus(200);
     }
 }
