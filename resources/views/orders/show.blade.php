@@ -57,10 +57,13 @@
         <!-- Cambiar estado -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-4">
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Cambiar estado</h3>
+            @if($order->status === 'delivered')
+                <p class="text-sm text-green-600 font-medium bg-green-50 p-2.5 rounded-md border border-green-100">El pedido ha sido entregado y su estado ya no puede ser modificado.</p>
+            @endif
             <form action="{{ route('orders.update', $order) }}" method="POST" class="space-y-3">
                 @csrf
                 @method('PUT')
-                <select name="status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm border px-3 py-2 outline-none transition-colors">
+                <select name="status" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm border px-3 py-2 outline-none transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed" {{ $order->status === 'delivered' ? 'disabled' : '' }}>
                     <option value="pending"    {{ $order->status === 'pending'    ? 'selected' : '' }}>Pendiente</option>
                     <option value="processing" {{ $order->status === 'processing' ? 'selected' : '' }}>En proceso</option>
                     <option value="shipped"    {{ $order->status === 'shipped'    ? 'selected' : '' }}>Enviado</option>
@@ -68,7 +71,7 @@
                     <option value="cancelled"  {{ $order->status === 'cancelled'  ? 'selected' : '' }}>Cancelado</option>
                     <option value="anulado"    {{ $order->status === 'anulado'    ? 'selected' : '' }}>Anulado</option>
                 </select>
-                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
+                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm disabled:bg-gray-300 disabled:cursor-not-allowed" {{ $order->status === 'delivered' ? 'disabled' : '' }}>
                     Actualizar estado
                 </button>
             </form>
@@ -123,7 +126,7 @@
                                 <span class="font-medium text-gray-900">{{ $item->product?->name ?? 'Producto eliminado' }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">{{ $item->product?->brand ?? '-' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">{{ $item->product?->brand?->name ?? '-' }}</td>
                         <td class="px-6 py-4 text-sm text-right text-gray-900">${{ number_format($item->unit_price, 2) }}</td>
                         <td class="px-6 py-4 text-sm text-right text-gray-900">{{ $item->quantity }}</td>
                         <td class="px-6 py-4 text-sm text-right font-medium text-gray-900">${{ number_format($item->unit_price * $item->quantity, 2) }}</td>

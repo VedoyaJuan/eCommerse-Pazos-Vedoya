@@ -24,7 +24,7 @@
                 @endif
                 <div class="absolute top-6 left-6">
                     <span class="bg-white/90 backdrop-blur-md text-zinc-900 text-sm font-bold px-4 py-2 rounded-full uppercase tracking-wider shadow-sm">
-                        {{ $product->brand ?? 'Luxury Collection' }}
+                        {{ $product->brand?->name ?? 'Luxury Collection' }}
                     </span>
                 </div>
             </div>

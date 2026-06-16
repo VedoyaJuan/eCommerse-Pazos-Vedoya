@@ -95,8 +95,19 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        foreach ($products as $product) {
-            Product::create($product);
+        foreach ($products as $productData) {
+            $brandName = $productData['brand'] ?? null;
+            $brandId = null;
+            if ($brandName) {
+                $brand = \App\Models\Brand::firstOrCreate(['name' => $brandName]);
+                $brandId = $brand->id;
+            }
+
+            $data = $productData;
+            unset($data['brand']);
+            $data['brand_id'] = $brandId;
+
+            Product::create($data);
         }
     }
 }

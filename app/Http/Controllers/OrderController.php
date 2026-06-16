@@ -9,7 +9,7 @@ class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with('items.product');
+        $query = Order::with('items.product.brand');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -30,12 +30,16 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load('items.product');
+        $order->load('items.product.brand');
         return view('orders.show', compact('order'));
     }
 
     public function update(Request $request, Order $order)
     {
+        if ($order->status === 'delivered') {
+            return back()->withErrors(['status' => 'No se puede cambiar el estado de un pedido ya entregado.']);
+        }
+
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled,anulado',
         ]);

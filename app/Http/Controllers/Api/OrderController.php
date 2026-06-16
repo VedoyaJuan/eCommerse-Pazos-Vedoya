@@ -15,7 +15,7 @@ class OrderController extends Controller
     {
         $orders = $request->user()
             ->orders()
-            ->with('items.product')
+            ->with('items.product.brand')
             ->latest()
             ->paginate(15);
 
@@ -28,7 +28,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $order->load('items.product');
+        $order->load('items.product.brand');
 
         return new OrderResource($order);
     }
@@ -85,14 +85,14 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->load('items.product');
+        $order->load('items.product.brand');
 
         return new OrderResource($order);
     }
 
     public function adminIndex(Request $request)
     {
-        $query = Order::with('items.product');
+        $query = Order::with('items.product.brand');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -113,19 +113,23 @@ class OrderController extends Controller
 
     public function adminShow(Order $order)
     {
-        $order->load('items.product');
+        $order->load('items.product.brand');
         return new OrderResource($order);
     }
 
     public function adminUpdate(Request $request, Order $order)
     {
+        if ($order->status === 'delivered') {
+            return response()->json(['message' => 'No se puede cambiar el estado de un pedido ya entregado.'], 422);
+        }
+
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled,anulado',
         ]);
 
         $order->update(['status' => $request->status]);
 
-        $order->load('items.product');
+        $order->load('items.product.brand');
         return new OrderResource($order);
     }
 }
