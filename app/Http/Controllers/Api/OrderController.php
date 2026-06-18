@@ -8,6 +8,7 @@ use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -70,7 +71,7 @@ class OrderController extends Controller
             }
 
             $order = Order::create([
-                'user_id'          => $request->user()->id,
+                'user_id'          => $request->user()?->id,
                 'status'           => 'pending',
                 'total'            => $total,
                 'customer_name'    => $data['customer_name'],
@@ -78,6 +79,7 @@ class OrderController extends Controller
                 'customer_phone'   => $data['customer_phone'] ?? null,
                 'shipping_address' => $data['shipping_address'],
                 'notes'            => $data['notes'] ?? null,
+                'access_token'     => Str::random(32),
             ]);
 
             $order->items()->createMany($lines);
@@ -87,7 +89,30 @@ class OrderController extends Controller
 
         $order->load('items.product');
 
-        return new OrderResource($order);
+        return response()->json([
+            'id' => $order->id,
+            'access_token' => $order->access_token,
+            'customer_name' => $order->customer_name,
+            'customer_email' => $order->customer_email,
+            'customer_phone' => $order->customer_phone,
+            'shipping_address' => $order->shipping_address,
+            'shipping_cost' => 0,
+            'notes' => $order->notes,
+            'status' => $order->status,
+            'total' => $order->total,
+            'created_at' => $order->created_at,
+            'items' => $order->items->map(fn($item) => [
+                'id' => $item->id,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'subtotal' => $item->quantity * $item->unit_price,
+                'product' => [
+                    'id' => $item->product->id,
+                    'name' => $item->product->name,
+                    'image' => $item->product->image,
+                ]
+            ]),
+        ], 201);
     }
 
     public function adminIndex(Request $request)
@@ -127,5 +152,71 @@ class OrderController extends Controller
 
         $order->load('items.product');
         return new OrderResource($order);
+    }
+
+    public function showGuest($token, Request $request)
+    {
+        $email = $request->query('email');
+
+        if (!$email) {
+            return response()->json(['error' => 'Email required'], 400);
+        }
+
+        $order = Order::where('access_token', $token)
+            ->where('customer_email', $email)
+            ->with('items.product')
+            ->firstOrFail();
+
+        return response()->json([
+            'id' => $order->id,
+            'access_token' => $order->access_token,
+            'customer_name' => $order->customer_name,
+            'customer_email' => $order->customer_email,
+            'customer_phone' => $order->customer_phone,
+            'shipping_address' => $order->shipping_address,
+            'shipping_cost' => 0,
+            'notes' => $order->notes,
+            'status' => $order->status,
+            'total' => $order->total,
+            'created_at' => $order->created_at,
+            'items' => $order->items->map(fn($item) => [
+                'id' => $item->id,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'subtotal' => $item->quantity * $item->unit_price,
+                'product' => [
+                    'id' => $item->product->id,
+                    'name' => $item->product->name,
+                    'image' => $item->product->image,
+                ]
+            ]),
+        ]);
+    }
+
+    public function cancelGuest($token, Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $order = Order::where('access_token', $token)
+            ->where('customer_email', $validated['email'])
+            ->firstOrFail();
+
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            return response()->json([
+                'error' => 'No se puede cancelar un pedido en estado ' . $order->status,
+                'current_status' => $order->status,
+            ], 422);
+        }
+
+        $order->update(['status' => 'cancelled']);
+
+        return response()->json([
+            'id' => $order->id,
+            'status' => $order->status,
+            'message' => 'Pedido cancelado exitosamente',
+            'cancelled_at' => now(),
+        ]);
     }
 }

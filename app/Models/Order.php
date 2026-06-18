@@ -17,6 +17,7 @@ class Order extends Model
         'customer_phone',
         'shipping_address',
         'notes',
+        'access_token',
     ];
 
     public function user(): BelongsTo
