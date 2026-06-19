@@ -12,9 +12,14 @@ class Product extends Model
         'description',
         'price',
         'stock',
-        'brand',
+        'brand_id',
         'image_url',
     ];
+
+    public function brand(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
 
     public function orderItems(): HasMany
     {

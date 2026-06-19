@@ -11,19 +11,24 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::with('brand');
+        $like = \Illuminate\Support\Facades\Schema::getConnection()->getDriverName() === 'sqlite' ? 'like' : 'ilike';
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('brand', 'ilike', "%{$search}%")
-                  ->orWhere('description', 'ilike', "%{$search}%");
+            $query->where(function ($q) use ($search, $like) {
+                $q->where('name', $like, "%{$search}%")
+                  ->orWhereHas('brand', function ($bq) use ($search, $like) {
+                      $bq->where('name', $like, "%{$search}%");
+                  })
+                  ->orWhere('description', $like, "%{$search}%");
             });
         }
 
         if ($request->filled('brand')) {
-            $query->where('brand', 'ilike', "%{$request->brand}%");
+            $query->whereHas('brand', function ($bq) use ($request, $like) {
+                $bq->where('name', $like, "%{$request->brand}%");
+            });
         }
 
         if ($request->filled('max_price')) {
@@ -55,7 +60,17 @@ class ProductController extends Controller
             'image_url'   => 'nullable|url',
         ]);
 
-        $product = Product::create($validated);
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        $product = Product::create($data);
 
         return new ProductResource($product);
     }
@@ -71,7 +86,17 @@ class ProductController extends Controller
             'image_url'   => 'nullable|url',
         ]);
 
-        $product->update($validated);
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        $product->update($data);
 
         return new ProductResource($product);
     }

@@ -24,10 +24,13 @@
                 <a href="{{ route('products.index') }}" class="text-sm font-medium text-zinc-600 hover:text-amber-600 transition-colors">Admin Panel</a>
             </nav>
             <div class="flex items-center space-x-4">
-                <button class="relative p-2 text-zinc-600 hover:text-amber-600 transition-colors cursor-not-allowed">
+                <a href="{{ route('cart.index') }}" class="relative p-2 text-zinc-600 hover:text-amber-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-amber-500 rounded-full">0</span>
-                </button>
+                    @php
+                        $cartCount = array_sum(session('cart', []));
+                    @endphp
+                    <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-amber-500 rounded-full">{{ $cartCount }}</span>
+                </a>
             </div>
         </div>
     </header>

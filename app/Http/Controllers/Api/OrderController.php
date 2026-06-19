@@ -16,7 +16,7 @@ class OrderController extends Controller
     {
         $orders = $request->user()
             ->orders()
-            ->with('items.product')
+            ->with('items.product.brand')
             ->latest()
             ->paginate(15);
 
@@ -29,7 +29,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'No autorizado.'], 403);
         }
 
-        $order->load('items.product');
+        $order->load('items.product.brand');
 
         return new OrderResource($order);
     }
@@ -87,7 +87,7 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->load('items.product');
+        $order->load('items.product.brand');
 
         return response()->json([
             'id' => $order->id,
@@ -117,7 +117,7 @@ class OrderController extends Controller
 
     public function adminIndex(Request $request)
     {
-        $query = Order::with('items.product');
+        $query = Order::with('items.product.brand');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -138,19 +138,39 @@ class OrderController extends Controller
 
     public function adminShow(Order $order)
     {
-        $order->load('items.product');
+        $order->load('items.product.brand');
         return new OrderResource($order);
     }
 
     public function adminUpdate(Request $request, Order $order)
     {
+        $finalStates = ['delivered', 'cancelled', 'anulado'];
+        if (in_array($order->status, $finalStates)) {
+            return response()->json(['message' => 'No se puede cambiar el estado de un pedido finalizado (Entregado, Cancelado o Anulado).'], 422);
+        }
+
         $request->validate([
             'status' => 'required|in:pending,processing,shipped,delivered,cancelled,anulado',
         ]);
 
-        $order->update(['status' => $request->status]);
+        $newStatus = $request->status;
 
-        $order->load('items.product');
+        DB::transaction(function () use ($order, $newStatus) {
+            if (in_array($newStatus, ['cancelled', 'anulado'])) {
+                foreach ($order->items as $item) {
+                    if ($item->product_id) {
+                        $product = Product::lockForUpdate()->find($item->product_id);
+                        if ($product) {
+                            $product->increment('stock', $item->quantity);
+                        }
+                    }
+                }
+            }
+
+            $order->update(['status' => $newStatus]);
+        });
+
+        $order->load('items.product.brand');
         return new OrderResource($order);
     }
 

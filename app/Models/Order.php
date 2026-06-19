@@ -17,6 +17,8 @@ class Order extends Model
         'customer_phone',
         'shipping_address',
         'notes',
+        'shipping_option',
+        'shipping_cost',
         'access_token',
     ];
 
