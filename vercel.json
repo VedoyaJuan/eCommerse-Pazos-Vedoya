@@ -7,7 +7,7 @@
         "APP_URL": "https://e-commerse-pazos-vedoya.vercel.app",
         "LOG_CHANNEL": "stderr",
         "LOG_LEVEL": "error",
-        "VIEW_COMPILED_PATH": "/tmp",
+        "VIEW_COMPILED_PATH": "/tmp/storage/framework/views",
         "CACHE_DRIVER": "array",
         "CACHE_STORE": "array",
         "SESSION_DRIVER": "cookie",

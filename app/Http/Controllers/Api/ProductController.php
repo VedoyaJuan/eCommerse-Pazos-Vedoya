@@ -11,19 +11,24 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::with('brand');
+        $like = \Illuminate\Support\Facades\Schema::getConnection()->getDriverName() === 'sqlite' ? 'like' : 'ilike';
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('brand', 'ilike', "%{$search}%")
-                  ->orWhere('description', 'ilike', "%{$search}%");
+            $query->where(function ($q) use ($search, $like) {
+                $q->where('name', $like, "%{$search}%")
+                  ->orWhereHas('brand', function ($bq) use ($search, $like) {
+                      $bq->where('name', $like, "%{$search}%");
+                  })
+                  ->orWhere('description', $like, "%{$search}%");
             });
         }
 
         if ($request->filled('brand')) {
-            $query->where('brand', 'ilike', "%{$request->brand}%");
+            $query->whereHas('brand', function ($bq) use ($request, $like) {
+                $bq->where('name', $like, "%{$request->brand}%");
+            });
         }
 
         if ($request->filled('max_price')) {
@@ -42,5 +47,66 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         return new ProductResource($product);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'stock'       => 'required|integer|min:0',
+            'brand'       => 'nullable|string|max:255',
+            'image_url'   => 'nullable|url',
+        ]);
+
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        $product = Product::create($data);
+
+        return new ProductResource($product);
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'price'       => 'required|numeric|min:0',
+            'stock'       => 'required|integer|min:0',
+            'brand'       => 'nullable|string|max:255',
+            'image_url'   => 'nullable|url',
+        ]);
+
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        $product->update($data);
+
+        return new ProductResource($product);
+    }
+
+    public function destroy(Product $product)
+    {
+        $product->delete();
+
+        return response()->json([
+            'message' => 'Producto eliminado exitosamente.'
+        ]);
     }
 }

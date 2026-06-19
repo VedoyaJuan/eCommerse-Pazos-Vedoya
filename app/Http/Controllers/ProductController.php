@@ -12,13 +12,15 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::with('brand');
 
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('brand', 'like', "%{$search}%")
+                  ->orWhereHas('brand', function($bq) use ($search) {
+                      $bq->where('name', 'like', "%{$search}%");
+                  })
                   ->orWhere('description', 'like', "%{$search}%");
             });
         }
@@ -57,7 +59,17 @@ class ProductController extends Controller
             'image_url' => 'nullable|url',
         ]);
 
-        Product::create($validated);
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        Product::create($data);
 
         return redirect()->route('products.index')
             ->with('success', 'Producto creado exitosamente.');
@@ -93,7 +105,17 @@ class ProductController extends Controller
             'image_url' => 'nullable|url',
         ]);
 
-        $product->update($validated);
+        $brandId = null;
+        if (!empty($validated['brand'])) {
+            $brand = \App\Models\Brand::firstOrCreate(['name' => $validated['brand']]);
+            $brandId = $brand->id;
+        }
+
+        $data = $validated;
+        unset($data['brand']);
+        $data['brand_id'] = $brandId;
+
+        $product->update($data);
 
         return redirect()->route('products.index')
             ->with('success', 'Producto actualizado exitosamente.');

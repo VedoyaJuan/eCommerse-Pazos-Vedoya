@@ -67,7 +67,7 @@
                     <td class="px-6 py-4">
                         <div class="font-medium text-gray-900">{{ $product->name }}</div>
                     </td>
-                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->brand ?? '-' }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-600">{{ $product->brand?->name ?? '-' }}</td>
                     <td class="px-6 py-4 text-sm font-medium text-gray-900">${{ number_format($product->price, 2) }}</td>
                     <td class="px-6 py-4 text-sm">
                         @if($product->stock > 0)

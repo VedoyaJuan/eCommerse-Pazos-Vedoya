@@ -15,7 +15,7 @@ return Application::configure(basePath: $basePath)
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
-        $middleware->statefulApi();
+        //$middleware->statefulApi();
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
