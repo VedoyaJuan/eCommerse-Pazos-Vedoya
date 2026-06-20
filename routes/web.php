@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\StoreController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\UserController;
 
@@ -25,16 +24,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Protected routes
 Route::middleware('auth')->group(function () {
-    // Storefront routes
-    Route::get('/', [StoreController::class, 'index'])->name('home');
-    Route::get('/product/{product}', [StoreController::class, 'show'])->name('store.show');
-
-    // Cart routes
-    Route::get('/cart', [\App\Http\Controllers\CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add/{product}', [\App\Http\Controllers\CartController::class, 'add'])->name('cart.add');
-    Route::post('/cart/update/{product}', [\App\Http\Controllers\CartController::class, 'update'])->name('cart.update');
-    Route::delete('/cart/remove/{product}', [\App\Http\Controllers\CartController::class, 'remove'])->name('cart.remove');
-    Route::post('/cart/checkout', [\App\Http\Controllers\CartController::class, 'checkout'])->name('cart.checkout');
+    // Redirect root to products index
+    Route::get('/', function () {
+        return redirect()->route('products.index');
+    })->name('home');
 
     // Admin routes
     Route::resource('products', ProductController::class);
