@@ -9,6 +9,9 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use MercadoPago\MercadoPagoConfig;
+use MercadoPago\Client\Preference\PreferenceClient;
+use MercadoPago\Exceptions\MPApiException;
 
 class OrderController extends Controller
 {
@@ -89,9 +92,60 @@ class OrderController extends Controller
 
         $order->load('items.product.brand');
 
+        $initPoint    = null;
+        $preferenceId = null;
+
+        try {
+            MercadoPagoConfig::setAccessToken(config('services.mercadopago.access_token'));
+            MercadoPagoConfig::setRuntimeEnviroment(MercadoPagoConfig::LOCAL);
+
+            $frontendUrl = config('app.frontend_url');
+
+            $client     = new PreferenceClient();
+            $preference = $client->create([
+                'items' => $order->items->map(fn($item) => [
+                    'id'          => (string) $item->product_id,
+                    'title'       => $item->product->name,
+                    'quantity'    => $item->quantity,
+                    'unit_price'  => (float) $item->unit_price,
+                    'currency_id' => 'ARS',
+                ])->toArray(),
+                'payer' => [
+                    'name'  => $order->customer_name,
+                    'email' => $order->customer_email,
+                ],
+                'back_urls' => [
+                    'success' => $frontendUrl . '?payment_status=approved&order_token=' . $order->access_token,
+                    'failure' => $frontendUrl . '?payment_status=failure&order_token=' . $order->access_token,
+                    'pending' => $frontendUrl . '?payment_status=pending&order_token=' . $order->access_token,
+                ],
+                'notification_url'     => url('/api/webhook/mercadopago'),
+                'external_reference'   => (string) $order->id,
+                'statement_descriptor' => 'TicTacStore',
+            ]);
+
+            $preferenceId = $preference->id;
+            $initPoint    = $preference->init_point;
+
+            $order->update(['mp_preference_id' => $preferenceId]);
+
+        } catch (MPApiException $e) {
+            \Log::error('MP preference failed', [
+                'order_id' => $order->id,
+                'content'  => $e->getApiResponse()->getContent(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('MP preference unexpected error', [
+                'order_id' => $order->id,
+                'message'  => $e->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'id' => $order->id,
             'access_token' => $order->access_token,
+            'mp_preference_id' => $preferenceId,
+            'init_point' => $initPoint,
             'customer_name' => $order->customer_name,
             'customer_email' => $order->customer_email,
             'customer_phone' => $order->customer_phone,
