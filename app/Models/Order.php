@@ -20,6 +20,8 @@ class Order extends Model
         'shipping_option',
         'shipping_cost',
         'access_token',
+        'mp_preference_id',
+        'mp_payment_id',
     ];
 
     public function user(): BelongsTo
