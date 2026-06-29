@@ -13,6 +13,21 @@ class OrderAndBrandTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mock(\App\Services\CloudinaryService::class, function ($mock) {
+            $mock->shouldReceive('upload')
+                 ->andReturnUsing(function ($file) {
+                     if (is_string($file)) {
+                         return $file;
+                     }
+                     return 'https://example.com/mocked-cloudinary-image.jpg';
+                 });
+        });
+    }
+
     /**
      * Test creating a product via Web controller.
      */
@@ -269,4 +284,31 @@ class OrderAndBrandTest extends TestCase
         $order->refresh();
         $this->assertEquals('anulado', $order->status);
     }
+
+    /**
+     * Test creating a product with an uploaded image file uploads to Cloudinary.
+     */
+    public function test_creating_product_with_image_file_uploads_to_cloudinary()
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('watch.jpg');
+
+        $response = $this->actingAs($user)->post(route('products.store'), [
+            'name' => 'Uploaded Watch',
+            'description' => 'A watch with file',
+            'price' => 200.00,
+            'stock' => 5,
+            'brand' => 'Omega',
+            'image' => $file,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product = Product::where('name', 'Uploaded Watch')->first();
+        $this->assertNotNull($product);
+        // Assert the mock URL is saved in database
+        $this->assertEquals('https://example.com/mocked-cloudinary-image.jpg', $product->image_url);
+    }
 }
+
