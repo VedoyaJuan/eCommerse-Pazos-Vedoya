@@ -33,7 +33,7 @@
                 <!-- Precio -->
                 <div>
                     <label for="price" class="block text-sm font-medium text-gray-700">Precio ($) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required 
+                    <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required max="99999999.99"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-slate-500 focus:ring-slate-500 sm:text-sm border px-3 py-2 outline-none transition-colors">
                     @error('price') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
