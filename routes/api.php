@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\MercadoPagoController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,6 +15,16 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 
+// Public order creation (guest or authenticated)
+Route::post('/orders', [OrderController::class, 'store']);
+
+// Public guest order access
+Route::get('/orders/guest/{token}', [OrderController::class, 'showGuest']);
+Route::patch('/orders/guest/{token}/cancel', [OrderController::class, 'cancelGuest']);
+
+// Webhook de Mercado Pago (público — MP llama desde sus servidores)
+Route::post('/webhook/mercadopago', [MercadoPagoController::class, 'webhook']);
+
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -21,7 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // User order routes
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
 
     // Admin/Vendedor product routes (CRUD)

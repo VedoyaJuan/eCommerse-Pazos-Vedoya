@@ -49,15 +49,16 @@ class ProductController extends Controller
         return new ProductResource($product);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\CloudinaryService $cloudinary)
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0|max:99999999.99',
             'stock'       => 'required|integer|min:0',
             'brand'       => 'nullable|string|max:255',
             'image_url'   => 'nullable|url',
+            'image'       => 'nullable|image|max:4096',
         ]);
 
         $brandId = null;
@@ -67,23 +68,36 @@ class ProductController extends Controller
         }
 
         $data = $validated;
-        unset($data['brand']);
+        unset($data['brand'], $data['image']);
         $data['brand_id'] = $brandId;
+
+        if ($request->hasFile('image')) {
+            $uploadedUrl = $cloudinary->upload($request->file('image'));
+            if ($uploadedUrl) {
+                $data['image_url'] = $uploadedUrl;
+            }
+        } elseif ($request->filled('image_url')) {
+            $uploadedUrl = $cloudinary->upload($request->input('image_url'));
+            if ($uploadedUrl) {
+                $data['image_url'] = $uploadedUrl;
+            }
+        }
 
         $product = Product::create($data);
 
         return new ProductResource($product);
     }
 
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Product $product, \App\Services\CloudinaryService $cloudinary)
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0|max:99999999.99',
             'stock'       => 'required|integer|min:0',
             'brand'       => 'nullable|string|max:255',
             'image_url'   => 'nullable|url',
+            'image'       => 'nullable|image|max:4096',
         ]);
 
         $brandId = null;
@@ -93,8 +107,20 @@ class ProductController extends Controller
         }
 
         $data = $validated;
-        unset($data['brand']);
+        unset($data['brand'], $data['image']);
         $data['brand_id'] = $brandId;
+
+        if ($request->hasFile('image')) {
+            $uploadedUrl = $cloudinary->upload($request->file('image'));
+            if ($uploadedUrl) {
+                $data['image_url'] = $uploadedUrl;
+            }
+        } elseif ($request->filled('image_url') && $request->input('image_url') !== $product->image_url) {
+            $uploadedUrl = $cloudinary->upload($request->input('image_url'));
+            if ($uploadedUrl) {
+                $data['image_url'] = $uploadedUrl;
+            }
+        }
 
         $product->update($data);
 

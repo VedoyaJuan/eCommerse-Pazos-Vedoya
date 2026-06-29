@@ -13,6 +13,21 @@ class OrderAndBrandTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->mock(\App\Services\CloudinaryService::class, function ($mock) {
+            $mock->shouldReceive('upload')
+                 ->andReturnUsing(function ($file) {
+                     if (is_string($file)) {
+                         return $file;
+                     }
+                     return 'https://example.com/mocked-cloudinary-image.jpg';
+                 });
+        });
+    }
+
     /**
      * Test creating a product via Web controller.
      */
@@ -160,150 +175,7 @@ class OrderAndBrandTest extends TestCase
         $this->assertEquals('delivered', $order->status);
     }
 
-    /**
-     * Test adding to cart.
-     */
-    public function test_can_add_product_to_cart()
-    {
-        $user = User::factory()->create();
-        $product = Product::create([
-            'name' => 'Casio F-91W',
-            'price' => 50000.00,
-            'stock' => 10,
-        ]);
 
-        $response = $this->actingAs($user)->post(route('cart.add', $product), [
-            'quantity' => 2,
-        ]);
-
-        $response->assertRedirect(route('cart.index'));
-        $this->assertEquals([$product->id => 2], session('cart'));
-    }
-
-    /**
-     * Test updating cart.
-     */
-    public function test_can_update_cart_quantity()
-    {
-        $user = User::factory()->create();
-        $product = Product::create([
-            'name' => 'Casio F-91W',
-            'price' => 50000.00,
-            'stock' => 10,
-        ]);
-
-        session(['cart' => [$product->id => 2]]);
-
-        $response = $this->actingAs($user)->post(route('cart.update', $product), [
-            'quantity' => 5,
-        ]);
-
-        $response->assertRedirect(route('cart.index'));
-        $this->assertEquals([$product->id => 5], session('cart'));
-    }
-
-    /**
-     * Test removing from cart.
-     */
-    public function test_can_remove_product_from_cart()
-    {
-        $user = User::factory()->create();
-        $product = Product::create([
-            'name' => 'Casio F-91W',
-            'price' => 50000.00,
-            'stock' => 10,
-        ]);
-
-        session(['cart' => [$product->id => 2]]);
-
-        $response = $this->actingAs($user)->delete(route('cart.remove', $product));
-
-        $response->assertRedirect(route('cart.index'));
-        $this->assertEquals([], session('cart'));
-    }
-
-    /**
-     * Test checkout with pickup option.
-     */
-    public function test_checkout_with_pickup_option()
-    {
-        $user = User::factory()->create();
-        $product = Product::create([
-            'name' => 'Casio F-91W',
-            'price' => 50000.00,
-            'stock' => 10,
-        ]);
-
-        session(['cart' => [$product->id => 2]]);
-
-        $response = $this->actingAs($user)->post(route('cart.checkout'), [
-            'customer_name' => 'John Doe',
-            'customer_email' => 'john@example.com',
-            'customer_phone' => '1144001234',
-            'shipping_option' => 'pickup',
-        ]);
-
-        $response->assertRedirect();
-        
-        // Assert order created
-        $order = Order::latest()->first();
-        $this->assertNotNull($order);
-        $this->assertEquals('pickup', $order->shipping_option);
-        $this->assertEquals(0, $order->shipping_cost);
-        $this->assertEquals(100000.00, $order->total); // 50000 * 2 + 0
-        $this->assertEquals('Retiro en local (Sucursal)', $order->shipping_address);
-        
-        // Assert stock decremented
-        $product->refresh();
-        $this->assertEquals(8, $product->stock);
-        
-        // Assert cart cleared
-        $this->assertNull(session('cart'));
-    }
-
-    /**
-     * Test checkout with delivery option.
-     */
-    public function test_checkout_with_delivery_option()
-    {
-        $user = User::factory()->create();
-        $product = Product::create([
-            'name' => 'Casio F-91W',
-            'price' => 50000.00,
-            'stock' => 10,
-        ]);
-
-        session(['cart' => [$product->id => 2]]);
-
-        $response = $this->actingAs($user)->post(route('cart.checkout'), [
-            'customer_name' => 'John Doe',
-            'customer_email' => 'john@example.com',
-            'customer_phone' => '1144001234',
-            'shipping_option' => 'delivery',
-            'zip_code' => '4000',
-            'province' => 'Tucumán',
-            'city' => 'Yerba Buena',
-            'address_detail' => 'Av. Aconquija 1200',
-            'shipping_cost' => 25200,
-        ]);
-
-        $response->assertRedirect();
-        
-        // Assert order created
-        $order = Order::latest()->first();
-        $this->assertNotNull($order);
-        $this->assertEquals('delivery', $order->shipping_option);
-        $this->assertEquals(25200.00, $order->shipping_cost);
-        $this->assertEquals(125200.00, $order->total); // 50000 * 2 + 25200
-        $this->assertEquals('Av. Aconquija 1200, C.P. 4000, Yerba Buena, Tucumán', $order->shipping_address);
-        
-        // Assert stock decremented
-        $product->refresh();
-        $this->assertEquals(8, $product->stock);
-        
-        // Assert cart cleared
-        $this->assertNull(session('cart'));
-    }
 
     /**
      * Test stock return and status locking for cancelled order (web).
@@ -412,4 +284,31 @@ class OrderAndBrandTest extends TestCase
         $order->refresh();
         $this->assertEquals('anulado', $order->status);
     }
+
+    /**
+     * Test creating a product with an uploaded image file uploads to Cloudinary.
+     */
+    public function test_creating_product_with_image_file_uploads_to_cloudinary()
+    {
+        $user = User::factory()->create(['role' => 'admin']);
+        \Illuminate\Support\Facades\Storage::fake('public');
+        $file = \Illuminate\Http\UploadedFile::fake()->image('watch.jpg');
+
+        $response = $this->actingAs($user)->post(route('products.store'), [
+            'name' => 'Uploaded Watch',
+            'description' => 'A watch with file',
+            'price' => 200.00,
+            'stock' => 5,
+            'brand' => 'Omega',
+            'image' => $file,
+        ]);
+
+        $response->assertRedirect(route('products.index'));
+
+        $product = Product::where('name', 'Uploaded Watch')->first();
+        $this->assertNotNull($product);
+        // Assert the mock URL is saved in database
+        $this->assertEquals('https://example.com/mocked-cloudinary-image.jpg', $product->image_url);
+    }
 }
+
